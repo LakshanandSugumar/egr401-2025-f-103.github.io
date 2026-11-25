@@ -891,10 +891,32 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-the-simulation-exposed" class="md-nav__link">
+  <a href="#daylight" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What the simulation exposed
+        Daylight
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#night-dec-21-1830-sun-12-below-the-horizon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Night (Dec 21, 18:30, sun 12° below the horizon)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-physics-showed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the physics showed
       
     </span>
   </a>
@@ -1011,10 +1033,32 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-the-simulation-exposed" class="md-nav__link">
+  <a href="#daylight" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What the simulation exposed
+        Daylight
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#night-dec-21-1830-sun-12-below-the-horizon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Night (Dec 21, 18:30, sun 12° below the horizon)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-physics-showed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the physics showed
       
     </span>
   </a>
@@ -1053,91 +1097,127 @@
 
 
 <h1 id="simulation-results">Simulation Results</h1>
-<p class="md-caption">Each row is one run of 40 random follower angles between −55° and +55°, using the <a href="../simulation/">field simulation</a> with a 7 m row gap. The camera was taught once at noon unless noted. Default conditions are 4 m/s wind, 10% lens dust and 3 DN sensor noise. Results vary a little from run to run.</p>
+<p class="md-caption">Each row is one run of 40 random follower angles between −55° and +55°, using the physics-based <a href="../simulation/">field simulation</a> with a 7 m row gap. The camera was taught once at noon. Defaults are 6 m/s mean wind with gusts, 10% lens dust and 3 DN read noise. Errors are measured against the true angle at the markers. Results vary a little from run to run.</p>
+<h2 id="daylight">Daylight</h2>
 <table>
 <thead>
 <tr>
 <th>Conditions</th>
 <th style="text-align: right;">Markers read</th>
-<th style="text-align: right;">Median error</th>
 <th style="text-align: right;">95% within</th>
-<th style="text-align: right;">Within ±1°</th>
+<th style="text-align: right;">Max error</th>
+<th style="text-align: right;">Tube twist at markers</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Jun 21, 12:00</td>
-<td style="text-align: right;">37/40</td>
-<td style="text-align: right;">0.06°</td>
-<td style="text-align: right;">0.25°</td>
-<td style="text-align: right;">37/37</td>
+<td>Jun 21, 12:00, markers at the drive point</td>
+<td style="text-align: right;">35/40</td>
+<td style="text-align: right;">0.23°</td>
+<td style="text-align: right;">0.31°</td>
+<td style="text-align: right;">0.00°</td>
+</tr>
+<tr>
+<td>Same, 12 m/s wind</td>
+<td style="text-align: right;">38/40</td>
+<td style="text-align: right;">0.36°</td>
+<td style="text-align: right;">0.36°</td>
+<td style="text-align: right;">0.00°</td>
+</tr>
+<tr>
+<td>Jun 21, 12:00, markers 25 m out</td>
+<td style="text-align: right;">39/40</td>
+<td style="text-align: right;">0.28°</td>
+<td style="text-align: right;">0.30°</td>
+<td style="text-align: right;">up to 1.99°</td>
+</tr>
+<tr>
+<td>Same, 12 m/s wind</td>
+<td style="text-align: right;">39/40</td>
+<td style="text-align: right;">0.20°</td>
+<td style="text-align: right;">0.47°</td>
+<td style="text-align: right;">up to 5.72°</td>
 </tr>
 <tr>
 <td>Jun 21, 09:00</td>
-<td style="text-align: right;">32/40</td>
-<td style="text-align: right;">0.10°</td>
-<td style="text-align: right;">0.24°</td>
-<td style="text-align: right;">32/32</td>
-</tr>
-<tr>
-<td>Jun 21, 16:00</td>
-<td style="text-align: right;">34/40</td>
-<td style="text-align: right;">0.07°</td>
-<td style="text-align: right;">0.26°</td>
-<td style="text-align: right;">34/34</td>
-</tr>
-<tr>
-<td>Jun 21, 16:00, 15 m/s wind, 40% dust</td>
-<td style="text-align: right;">37/40</td>
-<td style="text-align: right;">0.11°</td>
-<td style="text-align: right;">0.36°</td>
-<td style="text-align: right;">37/37</td>
-</tr>
-<tr>
-<td>Jun 21, 06:12, camera facing the low sun (east)</td>
 <td style="text-align: right;">36/40</td>
-<td style="text-align: right;">0.17°</td>
-<td style="text-align: right;">0.44°</td>
-<td style="text-align: right;">36/36</td>
+<td style="text-align: right;">0.33°</td>
+<td style="text-align: right;">0.53°</td>
+<td style="text-align: right;">0.00°</td>
 </tr>
 <tr>
-<td>Jun 21, 06:12, camera facing away from the sun (west)</td>
-<td style="text-align: right;">37/40</td>
-<td style="text-align: right;">0.04°</td>
-<td style="text-align: right;">0.23°</td>
-<td style="text-align: right;">37/37</td>
+<td>Jun 21, 06:12, camera facing the low sun</td>
+<td style="text-align: right;">36/40</td>
+<td style="text-align: right;">0.59°</td>
+<td style="text-align: right;">0.60°</td>
+<td style="text-align: right;">0.00°</td>
 </tr>
+</tbody>
+</table>
+<h2 id="night-dec-21-1830-sun-12-below-the-horizon">Night (Dec 21, 18:30, sun 12° below the horizon)</h2>
+<table>
+<thead>
 <tr>
-<td>Dec 21, 18:30, dark, no flash</td>
+<th>Conditions</th>
+<th style="text-align: right;">Markers read</th>
+<th style="text-align: right;">95% within</th>
+<th style="text-align: right;">Max error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No flash</td>
 <td style="text-align: right;">0/40</td>
 <td style="text-align: right;">–</td>
 <td style="text-align: right;">–</td>
+</tr>
+<tr>
+<td>Flash, 4 cd LED</td>
+<td style="text-align: right;">1/40</td>
+<td style="text-align: right;">–</td>
 <td style="text-align: right;">–</td>
 </tr>
 <tr>
-<td>Dec 21, 18:30, dark, retroreflective markers + flash</td>
-<td style="text-align: right;">39/40</td>
-<td style="text-align: right;">0.19°</td>
-<td style="text-align: right;">0.60°</td>
-<td style="text-align: right;">39/39</td>
+<td>Flash, 8 cd LED</td>
+<td style="text-align: right;">30/40</td>
+<td style="text-align: right;">0.52°</td>
+<td style="text-align: right;">0.52°</td>
+</tr>
+<tr>
+<td>Flash, 20 cd LED</td>
+<td style="text-align: right;">38/40</td>
+<td style="text-align: right;">0.35°</td>
+<td style="text-align: right;">0.36°</td>
+</tr>
+<tr>
+<td>Flash, 40 cd LED</td>
+<td style="text-align: right;">37/40</td>
+<td style="text-align: right;">0.26°</td>
+<td style="text-align: right;">0.33°</td>
 </tr>
 </tbody>
 </table>
 <div class="admonition success">
 <p class="admonition-title">Accuracy</p>
-<p>Every reading the camera made in daylight or with the flash at night was within the ±1° target. Most were within 0.3°.</p>
+<p>Every reading the camera made was within the ±1° target, including in strong wind, low sun and at night with a bright enough flash.</p>
 </div>
-<h2 id="what-the-simulation-exposed">What the simulation exposed</h2>
-<p><strong>The panel hides the far marker near edge-on.</strong> At about +6° to +14°, the camera looks almost along the panel surface, and the module partly hides the yellow marker on the far edge. The yellow-minus-pink gap then folds back, so one gap value can match two angles. The near pink marker is never hidden, so the estimator uses its position to pick the right reading. Most of the missed readings in the table are at these angles.</p>
-<p><strong>It can't see at night without help.</strong> After dark, the camera has to turn the gain up so far that noise buries the markers. Retroreflective markers with a small LED flash fix this: the camera takes one frame with the flash and one without, and subtracts them. A table taught at noon still works at night.</p>
-<p><strong>Facing the sun costs accuracy.</strong> With the camera facing east at sunrise, glare lowers contrast and the 95% error roughly doubles, though it stays inside ±1°. A camera facing west at the same time isn't affected. Mounting cameras so the sun is behind them, or adding a second camera facing the other way, avoids this.</p>
-<p><strong>Wind and dust matter less than expected.</strong> Strong wind shakes the camera post, but both markers move together, so the gap between them barely changes. Dust lowers contrast without moving the marker centers much.</p>
+<h2 id="what-the-physics-showed">What the physics showed</h2>
+<p><strong>Wind twists the follower row far more than ±1°, so where you put the markers matters.</strong> The follower is driven at one point, and wind torque twists the tube along its length. With the assumed 60 m row and 127 mm tube, the angle 25 m from the drive point swings up to 2° in a 6 m/s breeze and almost 6° at 12 m/s, oscillating at the tube's 1.9 Hz twist frequency. The camera measured these swings correctly, because the markers move with the row. That changes the question:</p>
+<ul>
+<li><strong>Markers at the drive point</strong> measure the linkage misalignment ARRAY cares about, with no wind twist mixed in.</li>
+<li><strong>Markers near the row end</strong> measure linkage misalignment plus wind twist. That's useful for structural monitoring, but readings need averaging over a few seconds to remove the gust swings.</li>
+</ul>
+<p><strong>The camera needs a 20 cd or brighter LED at night.</strong> The retroreflected light falls off with the square of the distance. An 8 cd LED is marginal at 7 m, and 4 cd is too dim. A 20 cd LED gives reliable readings.</p>
+<p><strong>The camera post barely moves.</strong> Under 12 m/s wind a 2 in. steel post leans about 0.01°, and the two-marker gap cancels even that.</p>
+<p><strong>Heat shimmer is negligible.</strong> At 7 m over hot ground it moves the markers about 0.006 pixel.</p>
+<p><strong>Facing the low sun costs accuracy but stays in spec.</strong> The 95% error roughly doubles at sunrise with the camera facing east.</p>
+<p><strong>Near edge-on the module hides the far marker.</strong> At about +6° to +14°, the near pink marker picks the right reading.</p>
 <h2 id="still-to-prove-with-hardware">Still to prove with hardware</h2>
 <ul>
-<li>Real color behavior of an OV2640 camera in Arizona sun, including auto white balance</li>
-<li>Heat shimmer above hot modules at 6–8 m</li>
+<li>Real color behavior and auto white balance of an OV2640 camera in Arizona sun</li>
+<li>The real retroreflected return from a chosen LED and tape at 7 m</li>
+<li>ARRAY's real row length, tube size and drive-point location, which set the twist</li>
 <li>Marker fading under UV over months</li>
-<li>The real retroreflective return from a small LED at 7 m</li>
 </ul>
 
 

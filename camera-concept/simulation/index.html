@@ -876,10 +876,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-is-modeled" class="md-nav__link">
+  <a href="#the-physics" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What is modeled
+        The physics
       
     </span>
   </a>
@@ -1026,10 +1026,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-is-modeled" class="md-nav__link">
+  <a href="#the-physics" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What is modeled
+        The physics
       
     </span>
   </a>
@@ -1059,7 +1059,7 @@
 
 
 <h1 id="field-simulation">Field Simulation</h1>
-<p>A 3D model of the field near Phoenix, with physically based lighting, a real sun path for any date and time, and a model of the camera sensor. It runs in your browser. Built by Lakshanand Sugumar.</p>
+<p>A physics-based model of the field near Phoenix. It covers the real sun path and daylight levels, gusting wind that twists the torque tube, a camera post that bends in the wind, and a camera sensor with real exposure limits. It runs in your browser. Built by Lakshanand Sugumar.</p>
 <p><a class="md-button md-button--primary" href="../sim/" target="_blank">Open full screen</a></p>
 <div style="position:relative; width:100%; aspect-ratio:16/10; min-height:600px; border:1px solid var(--md-default-fg-color--lightest); border-radius:8px; overflow:hidden">
   <iframe src="../sim/index.html" title="Tilt camera field simulation" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; border:0"></iframe>
@@ -1067,62 +1067,89 @@
 
 <h2 id="try-this">Try this</h2>
 <ol>
-<li>Press <strong>Teach</strong> at midday. This is the on-site calibration sweep.</li>
+<li>Press <strong>Teach</strong> at midday. This is the on-site calibration sweep against a reference inclinometer.</li>
 <li>Press <strong>Run 40-angle test</strong> to see the accuracy.</li>
-<li>Move <strong>Solar time</strong> toward sunrise with the camera looking east and watch sun glare take over the image.</li>
-<li>Raise <strong>Dust on the lens</strong> and <strong>Wind</strong>, or slide past sunset and turn on <strong>Retroreflective markers + LED flash</strong>.</li>
+<li>Move <strong>Markers and camera along the row</strong> out toward the row end and raise the <strong>wind</strong>. Watch the tube twist under the markers.</li>
+<li>Slide past sunset. Without the flash the camera sees nothing. Turn the flash on and lower the <strong>LED intensity</strong> to see where it stops working.</li>
 </ol>
-<h2 id="what-is-modeled">What is modeled</h2>
+<h2 id="the-physics">The physics</h2>
 <table>
 <thead>
 <tr>
 <th>Part</th>
-<th>How it's modeled</th>
+<th>Model</th>
+<th>Source of the numbers</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Site</td>
-<td>Phoenix, 33.4° N. North–south rows, 5 rows, 38 m long, 6–8 m apart</td>
+<td>Sun position</td>
+<td>Solar declination and hour angle for 33.4° N</td>
+<td>Standard solar geometry</td>
 </tr>
 <tr>
-<td>Tracker</td>
-<td>Single-axis, follows the sun, ±60° limit, stows flat at night. The follower row adds the misalignment you set</td>
+<td>Sunlight</td>
+<td>Direct beam through the atmosphere using the Kasten–Young air mass, about 105 lm/W</td>
+<td>Standard clear-sky model</td>
 </tr>
 <tr>
-<td>Modules</td>
-<td>2.28 × 1.13 m, 1-in-portrait, glass with clearcoat reflections, aluminum frame, white backsheet</td>
+<td>Twilight</td>
+<td>Sky illuminance from 600 lx at sunset to 0.0007 lx at −18°</td>
+<td>Published twilight levels</td>
 </tr>
 <tr>
-<td>Sun and sky</td>
-<td>Sun position from date and solar time. Physical sky, soft shadows, haze</td>
-</tr>
-<tr>
-<td>Camera</td>
-<td>640 × 480, 60° horizontal view, on a fixed post 0.5 m above the tube, aimed at the follower's tube</td>
-</tr>
-<tr>
-<td>Sensor effects</td>
-<td>Auto exposure, read and shot noise, 8-bit clipping, veiling glare when the sun is near the view, lens dust</td>
+<td>Tracking</td>
+<td>True tracking with backtracking for the row gap, ±60° limit, stow at night</td>
+<td>Standard single-axis backtracking geometry</td>
 </tr>
 <tr>
 <td>Wind</td>
-<td>Shakes the camera post and twists the follower row slightly</td>
+<td>Mean speed plus gusts with 20% turbulence intensity and a 25 m length scale</td>
+<td>Typical for open desert terrain near the ground</td>
 </tr>
 <tr>
-<td>Markers</td>
-<td>10 cm pink and yellow plates on the frame edges, 1 m apart along the row</td>
+<td>Wind torque</td>
+<td>Torque per metre = ½ ρ U² · C<sub>M</sub>(tilt) · chord²</td>
+<td>Hinge-moment form used for tracker wind design</td>
 </tr>
 <tr>
-<td>Night option</td>
-<td>Retroreflective markers and an LED flash, with one frame taken with the flash and one without, then subtracted</td>
+<td>Tube twist</td>
+<td>Steel torsion, G = 79.3 GPa, fixed at the drive point. First twist mode about 1.9 Hz, 3% damping</td>
+<td>Torsion of a thin-walled square tube</td>
+</tr>
+<tr>
+<td>Camera post</td>
+<td>2 in. schedule-40 steel pipe, cantilever bending under wind drag</td>
+<td>Beam bending</td>
+</tr>
+<tr>
+<td>Heat shimmer</td>
+<td>Angle-of-arrival jitter from air turbulence strength C<sub>n</sub>²</td>
+<td>Standard turbulence optics</td>
+</tr>
+<tr>
+<td>Camera exposure</td>
+<td>1/8000 s to 1/15 s, then gain up to 16×. Read noise and shot noise grow with gain</td>
+<td>Typical small CMOS sensor</td>
+</tr>
+<tr>
+<td>Night flash</td>
+<td>Retroreflected luminance = R<sub>A</sub> × LED intensity ÷ distance², R<sub>A</sub> = 250 cd/(lx·m²). Flash frames use their own exposure</td>
+<td>Prismatic retroreflective sheeting rating</td>
 </tr>
 </tbody>
 </table>
-<div class="admonition note">
-<p class="admonition-title">What it doesn't model</p>
-<p>Heat shimmer over hot modules, real lens distortion, marker color fading from UV, rain, and the exact behavior of a specific camera chip. A bench test with a real ESP32-CAM is still needed.</p>
+<div class="admonition warning">
+<p class="admonition-title">Assumed values, not from ARRAY</p>
+<p>ARRAY hasn't given row dimensions, tube size or wind data yet, so these are assumptions:
+60 m rows driven at the middle, a 127 mm square tube with 3.5 mm wall, 28 kg modules, and a hinge-moment peak of C<sub>M</sub> = 0.13.
+The twist results scale directly with these, so swap in ARRAY's numbers when they arrive.</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Still not modeled</p>
+<p>Aeroelastic effects such as torsional galloping, the drive linkage's own flex and backlash, real lens distortion, motion blur during long night exposures, marker fading from UV, and rain.</p>
+</div>
+<p>The camera reports the angle to the ARRAY controller over RS-485. ARRAY hasn't specified the controller's message format yet, so the simulation shows only the angle.</p>
 
 
 
