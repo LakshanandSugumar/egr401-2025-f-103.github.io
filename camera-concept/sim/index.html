@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tilt Camera Field Sim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: full-bleed 3D field view, instrument panel docked right (stacks below on phones). Single dark look, chosen on purpose. */
+  :root {
+    --bg: #0e1116;
+    --panel: #151a21;
+    --panel-2: #1b222b;
+    --line: #2a333f;
+    --fg: #e7ecf2;
+    --muted: #8d99a8;
+    --accent: #ff7a2f;
+    --ok: #3ccf8e;
+    --warn: #f5b83d;
+    --bad: #ff5d5d;
+    --pink: #ff4fa0;
+    --yellow: #ffd21a;
+    --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--fg); font: 13px/1.45 var(--font); overflow: hidden; }
+  .app { display: grid; grid-template-columns: minmax(0, 1fr) clamp(290px, 36%, 380px); height: 100%; }
+  .view { position: relative; min-width: 0; }
+  #scene { display: block; width: 100%; height: 100%; }
+  .hud {
+    position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); top: 12px;
+    display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none;
+  }
+  .chip {
+    background: rgba(14,17,22,.72); backdrop-filter: blur(6px); border: 1px solid var(--line);
+    border-radius: 999px; padding: 4px 10px; font: 600 11px/1.4 var(--mono); color: var(--fg);
+    font-variant-numeric: tabular-nums;
+  }
+  .chip b { color: var(--accent); font-weight: 600; }
+  .legend { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); bottom: 12px; color: var(--muted); font-size: 11px; pointer-events: none;
+            background: rgba(14,17,22,.6); padding: 4px 8px; border-radius: 6px; }
+  .loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font: 500 13px var(--font); }
+
+  aside {
+    background: var(--panel); border-left: 1px solid var(--line); overflow-y: auto;
+    padding-block: 14px 24px; padding-left: 16px; padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  h1 { font-size: 15px; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+  .sub { color: var(--muted); margin: 2px 0 0; font-size: 12px; }
+  h2 { font: 600 10.5px/1.2 var(--font); text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 0 0 8px; }
+  section { display: flex; flex-direction: column; }
+  .feeds { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .feed { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .feed canvas { width: 100%; aspect-ratio: 4 / 3; background: #000; border-radius: 6px; border: 1px solid var(--line); image-rendering: pixelated; }
+  .feed span { color: var(--muted); font-size: 10.5px; }
+
+  .readout { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .readout dt { color: var(--muted); }
+  .readout dd { margin: 0; font: 600 12.5px var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+  .readout .big { font-size: 16px; }
+  .status { display: inline-flex; align-items: center; gap: 6px; font: 600 11px var(--mono); padding: 3px 9px; border-radius: 999px; border: 1px solid currentColor; justify-self: end; }
+  .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .s-ok { color: var(--ok); } .s-warn { color: var(--warn); } .s-bad { color: var(--bad); } .s-idle { color: var(--muted); }
+
+  .ctrl { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 10px; padding: 5px 0; }
+  .ctrl label { color: var(--fg); }
+  .ctrl output { font: 600 11.5px var(--mono); color: var(--accent); font-variant-numeric: tabular-nums; }
+  .ctrl input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+  .ctrl small { grid-column: 1 / -1; color: var(--muted); font-size: 11px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  select, button {
+    font: 500 12px var(--font); color: var(--fg); background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 7px; padding: 7px 10px;
+  }
+  button { cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #1a0d04; font-weight: 600; }
+  button:disabled { opacity: .5; cursor: progress; }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .check { display: flex; gap: 8px; align-items: flex-start; padding: 5px 0; }
+  .check input { accent-color: var(--accent); margin-top: 2px; }
+  .check small { display: block; color: var(--muted); font-size: 11px; }
+  .result { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font: 12px var(--mono); color: var(--muted); white-space: pre-wrap; font-variant-numeric: tabular-nums; }
+  .result strong { color: var(--fg); }
+  .bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .1s; }
+  .specs { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 11.5px; color: var(--muted); }
+  .specs b { color: var(--fg); font-weight: 500; }
+  .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+
+  @media (max-width: 640px) {
+    body { overflow: auto; }
+    .app { grid-template-columns: 1fr; grid-template-rows: 56vh auto; height: auto; }
+    aside { border-left: 0; border-top: 1px solid var(--line); }
+  }
+  @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div class="app">
+  <div class="view">
+    <canvas id="scene" aria-label="3D view of the solar field with the drive row, the follower row and the tilt camera"></canvas>
+    <div class="loading" id="loading">Building the solar field…</div>
+    <div class="hud" id="hud"></div>
+    <div class="legend">Drag to orbit · scroll to zoom · right-drag to pan</div>
+  </div>
+
+  <aside>
+    <div>
+      <h1>Tilt camera field simulation</h1>
+      <p class="sub">Team 20 · camera on the drive row reads colored markers on the follower row</p>
+      <p class="sub">Built by Lakshanand Sugumar</p>
+    </div>
+
+    <section>
+      <h2>Camera feed (640 × 480)</h2>
+      <div class="feeds">
+        <div class="feed"><canvas id="feed" width="640" height="480"></canvas><span>What the sensor sees</span></div>
+        <div class="feed"><canvas id="mask" width="640" height="480"></canvas><span>After color subtraction</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Measurement</h2>
+      <dl class="readout">
+        <dt>Status</dt><dd><span id="status" class="status s-idle">Not taught</span></dd>
+        <dt>Drive row angle</dt><dd id="r-drive">–</dd>
+        <dt>Follower angle, true</dt><dd id="r-true">–</dd>
+        <dt>Follower angle, camera</dt><dd id="r-est" class="big">–</dd>
+        <dt>Misalignment, true</dt><dd id="r-mis-true">–</dd>
+        <dt>Misalignment, camera</dt><dd id="r-mis-est">–</dd>
+        <dt>Error</dt><dd id="r-err">–</dd>
+        <dt>Markers found</dt><dd id="r-found">–</dd>
+      </dl>
+    </section>
+
+    <section>
+      <h2>Teach and test</h2>
+      <div class="row">
+        <button id="teach" class="primary">Teach: sweep −60° to +60°</button>
+        <button id="test">Run 40-angle test</button>
+      </div>
+      <div class="bar" style="margin-top:8px"><i id="progress"></i></div>
+      <div class="result" id="result" style="margin-top:8px">Teach first. The sweep tilts the follower row in 2° steps and records where the pink and yellow markers land in the image, like the on-site calibration with the reference inclinometer.</div>
+    </section>
+
+    <section>
+      <h2>Sun and site · Phoenix, AZ (33.4° N)</h2>
+      <div class="ctrl"><label for="time">Solar time</label><output id="o-time"></output>
+        <input id="time" type="range" min="4.5" max="19.5" step="0.05" value="10.5"></div>
+      <div class="ctrl"><label for="day">Date</label><output id="o-day"></output>
+        <input id="day" type="range" min="1" max="365" step="1" value="172"></div>
+      <div class="row"><button id="play">Play day</button>
+        <select id="facing" aria-label="Which way the camera looks">
+          <option value="1">Camera looks east</option>
+          <option value="-1">Camera looks west</option>
+        </select></div>
+    </section>
+
+    <section>
+      <h2>Rows</h2>
+      <div class="ctrl"><label for="gap">Row gap (pitch)</label><output id="o-gap"></output>
+        <input id="gap" type="range" min="6" max="8" step="0.1" value="7"></div>
+      <div class="ctrl"><label for="drift">Follower misalignment</label><output id="o-drift"></output>
+        <input id="drift" type="range" min="-10" max="10" step="0.1" value="3"><small>How far the follower row has drifted from the drive row</small></div>
+    </section>
+
+    <section>
+      <h2>Field conditions</h2>
+      <div class="ctrl"><label for="wind">Wind</label><output id="o-wind"></output>
+        <input id="wind" type="range" min="0" max="20" step="0.5" value="4"><small>Shakes the camera post and twists the follower row slightly</small></div>
+      <div class="ctrl"><label for="dust">Dust on the lens</label><output id="o-dust"></output>
+        <input id="dust" type="range" min="0" max="100" step="1" value="10"></div>
+      <div class="ctrl"><label for="noise">Sensor noise</label><output id="o-noise"></output>
+        <input id="noise" type="range" min="0" max="12" step="0.5" value="3"></div>
+      <div class="ctrl"><label for="tol">Color threshold</label><output id="o-tol"></output>
+        <input id="tol" type="range" min="10" max="120" step="1" value="38"><small>Minimum color-subtraction score for a marker pixel</small></div>
+      <label class="check"><input id="flash" type="checkbox"><span>Retroreflective markers + LED flash<small>After dark, takes a frame with and without the flash and subtracts them. In daylight the camera uses plain color.</small></span></label>
+    </section>
+
+    <section>
+      <h2>Modeled hardware</h2>
+      <div class="specs">
+        <span>Camera</span><b>OV2640-class, 640 × 480, 60° horizontal view</b>
+        <span>Mount</span><b>Fixed post, 0.5 m above the tube</b>
+        <span>Markers</span><b><span class="sw" style="background:var(--pink)"></span>near edge · <span class="sw" style="background:var(--yellow)"></span>far edge, 10 cm, offset 1 m along the row</b>
+        <span>Modules</span><b>2.28 × 1.13 m, 1-in-portrait</b>
+        <span>Range</span><b>±60° tracking, stow at night</b>
+        <span>Target</span><b>±1° accuracy, under $10 per unit</b>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { Sky } from "three/addons/objects/Sky.js";
+
+/* ---------------- constants (metres, degrees) ---------------- */
+const LAT = 33.45;                 // Phoenix
+const PIVOT_H = 1.6;               // torque tube height
+const MOD_W = 2.28, MOD_L = 1.13, MOD_T = 0.04;  // module across row, along row, thickness
+const MOD_Y = 0.12;                // modules sit above the tube axis
+const ROW_LEN = 38;
+const CAM_ABOVE = 0.5;             // camera height above the tube
+const SENSOR_W = 640, SENSOR_H = 480, HFOV = 60;
+const MAX_TILT = 60;
+const D2R = Math.PI / 180;
+
+const $ = (id) => document.getElementById(id);
+const state = {
+  time: +$("time").value, day: +$("day").value, gap: +$("gap").value, drift: +$("drift").value,
+  wind: +$("wind").value, dust: +$("dust").value, noise: +$("noise").value, tol: +$("tol").value,
+  facing: +$("facing").value, flash: false, playing: false,
+  table: null, busy: false, exposure: 0.2,
+};
+
+/* ---------------- renderer and scene ---------------- */
+const canvas = $("scene");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.55;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+const view = new THREE.PerspectiveCamera(45, 1, 0.1, 6000);
+view.position.set(15, 5.5, 13);
+const controls = new OrbitControls(view, canvas);
+controls.target.set(3.5, 1.7, 0);
+controls.enableDamping = true;
+controls.maxPolarAngle = Math.PI * 0.495;
+controls.minDistance = 2; controls.maxDistance = 120;
+
+/* sky + sun */
+const sky = new Sky(); sky.scale.setScalar(4500); scene.add(sky);
+const skyU = sky.material.uniforms;
+skyU.turbidity.value = 3; skyU.rayleigh.value = 1.7; skyU.mieCoefficient.value = 0.004; skyU.mieDirectionalG.value = 0.82;
+const envScene = new THREE.Scene(); const envSky = new Sky(); envSky.scale.setScalar(4500); envScene.add(envSky);
+for (const k of ["turbidity", "rayleigh", "mieCoefficient", "mieDirectionalG"]) envSky.material.uniforms[k].value = skyU[k].value;
+const pmrem = new THREE.PMREMGenerator(renderer);
+let envRT = null;
+
+const sun = new THREE.DirectionalLight(0xffffff, 3);
+sun.castShadow = true;
+sun.shadow.mapSize.set(4096, 4096);
+Object.assign(sun.shadow.camera, { left: -32, right: 32, top: 32, bottom: -32, near: 1, far: 200 });
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
+scene.add(sun, sun.target);
+const hemi = new THREE.HemisphereLight(0xbfd6ff, 0x8a6a48, 0.6); scene.add(hemi);
+scene.fog = new THREE.FogExp2(0xc9d6e6, 0.00045);
+
+/* ---------------- procedural textures ---------------- */
+function noise2(w, h, octaves, seed) {
+  // value noise, tiling
+  const out = new Float32Array(w * h);
+  let rnd = seed; const rand = () => (rnd = (rnd * 16807) % 2147483647) / 2147483647;
+  let amp = 1, total = 0;
+  for (let o = 0; o < octaves; o++) {
+    const cells = 4 << o, grid = new Float32Array(cells * cells);
+    for (let i = 0; i < grid.length; i++) grid[i] = rand();
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const gx = x / w * cells, gy = y / h * cells, x0 = gx | 0, y0 = gy | 0;
+      const fx = gx - x0, fy = gy - y0, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+      const g = (a, b) => grid[(b % cells) * cells + (a % cells)];
+      const v = g(x0, y0) * (1 - sx) * (1 - sy) + g(x0 + 1, y0) * sx * (1 - sy) + g(x0, y0 + 1) * (1 - sx) * sy + g(x0 + 1, y0 + 1) * sx * sy;
+      out[y * w + x] += v * amp;
+    }
+    total += amp; amp *= 0.55;
+  }
+  for (let i = 0; i < out.length; i++) out[i] /= total;
+  return out;
+}
+function sandTexture() {
+  const S = 512, c = document.createElement("canvas"); c.width = c.height = S;
+  const ctx = c.getContext("2d"), img = ctx.createImageData(S, S), n = noise2(S, S, 6, 7);
+  let r = 99; const rand = () => (r = (r * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < S * S; i++) {
+    const v = n[i], grit = rand() < 0.04 ? -0.25 * rand() : rand() * 0.06;
+    const k = 0.82 + (v - 0.5) * 0.5 + grit;
+    img.data[i * 4] = 196 * k; img.data[i * 4 + 1] = 168 * k; img.data[i * 4 + 2] = 128 * k; img.data[i * 4 + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(90, 90);
+  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+function cellTexture() {
+  // 6 x 12 mono-PERC cells (half-cut look), silver busbars, white backsheet gaps
+  const W = 384, H = 768, c = document.createElement("canvas"); c.width = W; c.height = H;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#d9dde2"; ctx.fillRect(0, 0, W, H);
+  const cols = 6, rows = 12, g = 4, cw = (W - g * (cols + 1)) / cols, ch = (H - g * (rows + 1)) / rows;
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+    const x = g + i * (cw + g), y = g + j * (ch + g);
+    const grad = ctx.createLinearGradient(x, y, x + cw, y + ch);
+    grad.addColorStop(0, "#141c2e"); grad.addColorStop(1, "#0b1220");
+    ctx.fillStyle = grad; ctx.fillRect(x, y, cw, ch);
+    ctx.fillStyle = "rgba(190,200,215,.55)";
+    for (let b = 1; b <= 5; b++) ctx.fillRect(x + cw * b / 6 - 0.6, y, 1.2, ch);
+    ctx.fillStyle = "rgba(160,175,200,.08)";
+    for (let f = 0; f < ch; f += 3) ctx.fillRect(x, y + f, cw, 0.6);
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+
+/* ---------------- materials ---------------- */
+const M = {
+  sand: new THREE.MeshStandardMaterial({ map: sandTexture(), roughness: 0.97, metalness: 0 }),
+  glass: new THREE.MeshPhysicalMaterial({ map: cellTexture(), roughness: 0.32, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.04, envMapIntensity: 1.0 }),
+  frame: new THREE.MeshStandardMaterial({ color: 0xb8bec6, roughness: 0.35, metalness: 0.9 }),
+  back: new THREE.MeshStandardMaterial({ color: 0xe9ebee, roughness: 0.7 }),
+  steel: new THREE.MeshStandardMaterial({ color: 0x9aa1a8, roughness: 0.45, metalness: 0.85 }),
+  pile: new THREE.MeshStandardMaterial({ color: 0x8b9198, roughness: 0.55, metalness: 0.7 }),
+  housing: new THREE.MeshStandardMaterial({ color: 0x3a3f46, roughness: 0.6 }),
+  lens: new THREE.MeshPhysicalMaterial({ color: 0x05070a, roughness: 0.05, metalness: 0.2, clearcoat: 1 }),
+  rock: new THREE.MeshStandardMaterial({ color: 0x8a7562, roughness: 0.9 }),
+  bush: new THREE.MeshStandardMaterial({ color: 0x5c6a3a, roughness: 0.95 }),
+  mountain: new THREE.MeshStandardMaterial({ color: 0x7d6a63, roughness: 1, flatShading: true }),
+  pink: new THREE.MeshStandardMaterial({ color: 0xff4fa0, roughness: 0.55, emissive: 0xff4fa0, emissiveIntensity: 0 }),
+  yellow: new THREE.MeshStandardMaterial({ color: 0xffd21a, roughness: 0.55, emissive: 0xffd21a, emissiveIntensity: 0 }),
+  motor: new THREE.MeshStandardMaterial({ color: 0x2f5c8a, roughness: 0.5, metalness: 0.4 }),
+};
+
+/* ---------------- ground, rocks, bushes, mountains ---------------- */
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), M.sand);
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+{
+  let r = 4242; const rand = () => (r = (r * 16807) % 2147483647) / 2147483647;
+  const rocks = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.12, 0), M.rock, 900);
+  const bushes = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.45, 1), M.bush, 140);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3(), e = new THREE.Euler();
+  for (let i = 0; i < 900; i++) {
+    p.set((rand() - 0.5) * 90, 0.02, (rand() - 0.5) * 90); const k = 0.3 + rand() * 1.4;
+    s.set(k, k * (0.4 + rand() * 0.5), k); q.setFromEuler(e.set(rand() * 3, rand() * 3, rand() * 3));
+    rocks.setMatrixAt(i, m.compose(p, q, s));
+  }
+  for (let i = 0; i < 140; i++) {
+    let x = (rand() - 0.5) * 140, z = (rand() - 0.5) * 140;
+    if (Math.abs(z) < 22 && x > -20 && x < 28) x += (x > 4 ? 30 : -30);   // keep the rows clear
+    p.set(x, 0.25, z); const k = 0.6 + rand() * 0.9; s.set(k, k * 0.7, k);
+    bushes.setMatrixAt(i, m.compose(p, q.identity(), s));
+  }
+  rocks.castShadow = rocks.receiveShadow = true; bushes.castShadow = bushes.receiveShadow = true;
+  scene.add(rocks, bushes);
+
+  // distant ridge line
+  const seg = 220, geo = new THREE.BufferGeometry(), pos = [], idx = [];
+  for (let i = 0; i <= seg; i++) {
+    const a = i / seg * Math.PI * 2, R = 1100;
+    const hgt = 40 + 70 * Math.abs(Math.sin(a * 3.1) * Math.cos(a * 1.7)) + 45 * Math.abs(Math.sin(a * 9.3 + 1)) + 20 * Math.sin(a * 23);
+    pos.push(Math.cos(a) * R, -5, Math.sin(a) * R, Math.cos(a) * (R + 30), Math.max(10, hgt), Math.sin(a) * (R + 30));
+    if (i < seg) { const b = i * 2; idx.push(b, b + 2, b + 1, b + 1, b + 2, b + 3); }
+  }
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); geo.setIndex(idx); geo.computeVertexNormals();
+  const ridge = new THREE.Mesh(geo, M.mountain); ridge.material.side = THREE.DoubleSide; scene.add(ridge);
+}
+
+/* ---------------- tracker rows ---------------- */
+const moduleGeo = new THREE.BoxGeometry(MOD_W, MOD_T, MOD_L);
+const moduleMats = [M.frame, M.frame, M.glass, M.back, M.frame, M.frame]; // +x -x +y -y +z -z
+const nMods = Math.floor(ROW_LEN / (MOD_L + 0.02));
+
+function makeRow(x, isDrive) {
+  const root = new THREE.Group(); root.position.set(x, 0, 0); scene.add(root);
+  for (let z = -ROW_LEN / 2 + 1; z <= ROW_LEN / 2 - 1; z += 6.5) {
+    const pile = new THREE.Mesh(new THREE.BoxGeometry(0.15, PIVOT_H + 0.05, 0.1), M.pile);
+    pile.position.set(0, (PIVOT_H + 0.05) / 2 - 0.08, z); pile.castShadow = pile.receiveShadow = true; root.add(pile);
+    const brg = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.12, 20), M.steel);
+    brg.rotation.x = Math.PI / 2; brg.position.set(0, PIVOT_H, z); brg.castShadow = true; root.add(brg);
+  }
+  if (isDrive) {
+    const motor = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.35, 0.3), M.motor);
+    motor.position.set(0, PIVOT_H - 0.3, -3.2); motor.castShadow = true; root.add(motor);
+  }
+  const tilt = new THREE.Group(); tilt.position.set(0, PIVOT_H, 0); root.add(tilt);
+  const tube = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.13, ROW_LEN), M.steel);
+  tube.rotation.z = Math.PI / 4; tube.castShadow = tube.receiveShadow = true; tilt.add(tube);
+  const rails = new THREE.InstancedMesh(new THREE.BoxGeometry(0.05, 0.06, ROW_LEN), M.steel, 2);
+  const m = new THREE.Matrix4();
+  rails.setMatrixAt(0, m.makeTranslation(-0.55, MOD_Y - 0.05, 0)); rails.setMatrixAt(1, m.makeTranslation(0.55, MOD_Y - 0.05, 0));
+  rails.castShadow = true; tilt.add(rails);
+  const mods = new THREE.InstancedMesh(moduleGeo, moduleMats, nMods);
+  for (let i = 0; i < nMods; i++) mods.setMatrixAt(i, m.makeTranslation(0, MOD_Y, -ROW_LEN / 2 + MOD_L / 2 + i * (MOD_L + 0.02)));
+  mods.castShadow = mods.receiveShadow = true; tilt.add(mods);
+  return { root, tilt };
+}
+
+const rows = [];
+for (let k = -2; k <= 2; k++) rows.push({ k, ...makeRow(0, k === 0) });
+const drive = rows.find(r => r.k === 0);
+
+/* markers on the follower: built once, re-parented when the camera direction changes */
+const markerGeo = new THREE.BoxGeometry(0.05, 0.10, 0.10);
+const pinkM = new THREE.Mesh(markerGeo, M.pink), yellowM = new THREE.Mesh(markerGeo, M.yellow);
+pinkM.castShadow = yellowM.castShadow = true;
+
+/* camera post + 3D-printed housing on the drive row */
+const post = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, PIVOT_H + CAM_ABOVE, 14), M.pile);
+const housing = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.07, 0.09), M.housing);
+const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.012, 16), M.lens);
+const hood = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.012, 0.09), M.housing);
+[post, housing, hood].forEach(o => { o.castShadow = true; scene.add(o); }); scene.add(lens);
+
+const sensorCam = new THREE.PerspectiveCamera(2 * Math.atan(Math.tan(HFOV / 2 * D2R) * SENSOR_H / SENSOR_W) / D2R, SENSOR_W / SENSOR_H, 0.05, 3000);
+const flashLight = new THREE.SpotLight(0xffffff, 0, 30, 18 * D2R, 0.4, 2);
+scene.add(flashLight, flashLight.target);
+
+let follower;
+function layout() {
+  const f = state.facing;   // +1: camera looks east (+x)
+  rows.forEach(r => r.root.position.x = r.k * state.gap);
+  follower = rows.find(r => r.k === f);
+  // markers: pink on the edge nearest the camera, yellow on the far edge, 1 m apart along the row
+  const edge = MOD_W / 2 + 0.025;
+  follower.tilt.add(pinkM, yellowM);
+  pinkM.position.set(-f * edge, MOD_Y, -0.5);
+  yellowM.position.set(f * edge, MOD_Y, 0.5);
+  // camera on a fixed post at the drive row edge facing the follower
+  const cx = f * (MOD_W / 2 + 0.25), cy = PIVOT_H + CAM_ABOVE;
+  post.position.set(cx, cy / 2, 0);
+  housing.position.set(cx, cy, 0);
+  hood.position.set(cx + f * 0.03, cy + 0.04, 0);
+  lens.position.set(cx + f * 0.058, cy, 0); lens.rotation.z = Math.PI / 2;
+  sensorCam.position.set(cx + f * 0.066, cy, 0);
+  sensorCam.userData.aim = new THREE.Vector3(f * state.gap, PIVOT_H, 0);
+  sensorCam.lookAt(sensorCam.userData.aim);
+  sensorCam.updateMatrixWorld();
+  flashLight.position.copy(sensorCam.position); flashLight.target.position.copy(sensorCam.userData.aim);
+  state.table = null; setStatus("Not taught", "idle");
+}
+
+/* ---------------- sun position ---------------- */
+function sunVector(day, solarHour) {
+  const decl = 23.44 * D2R * Math.sin(2 * Math.PI * (284 + day) / 365);
+  const H = (solarHour - 12) * 15 * D2R, phi = LAT * D2R;
+  const E = -Math.cos(decl) * Math.sin(H);
+  const N = Math.sin(decl) * Math.cos(phi) - Math.cos(decl) * Math.cos(H) * Math.sin(phi);
+  const U = Math.sin(decl) * Math.sin(phi) + Math.cos(decl) * Math.cos(H) * Math.cos(phi);
+  return new THREE.Vector3(E, U, -N).normalize();   // three: x=east, y=up, z=south
+}
+function trackerAngle(s) {
+  // single-axis N-S tracker: rotate to face the sun; positive faces east. Stow flat at night.
+  if (s.y <= 0.01) return 0;
+  const a = Math.atan2(s.x, s.y) / D2R;
+  return Math.max(-MAX_TILT, Math.min(MAX_TILT, a));
+}
+
+let sunDir = new THREE.Vector3(0, 1, 0), lastEnvKey = "";
+function updateSun() {
+  sunDir = sunVector(state.day, state.time);
+  skyU.sunPosition.value.copy(sunDir);
+  envSky.material.uniforms.sunPosition.value.copy(sunDir);
+  const el = Math.asin(sunDir.y) / D2R;
+  const day = THREE.MathUtils.smoothstep(el, -4, 12);
+  sun.position.copy(sunDir).multiplyScalar(90).add(new THREE.Vector3(3, 0, 0));
+  sun.target.position.set(3, 0, 0);
+  sun.intensity = 3.4 * THREE.MathUtils.smoothstep(el, -1, 18);
+  const warm = THREE.MathUtils.clamp(1 - el / 25, 0, 1);
+  sun.color.setRGB(1, 1 - 0.25 * warm, 1 - 0.55 * warm);
+  hemi.intensity = 0.03 + 0.62 * day;
+  scene.fog.color.setRGB(0.12 + 0.68 * day, 0.14 + 0.72 * day, 0.2 + 0.72 * day);
+  // night sky floor so the scene is dark but not black
+  renderer.toneMappingExposure = 0.5 + (1 - day) * 0.6;
+  const key = state.day + ":" + state.time.toFixed(2);
+  if (key !== lastEnvKey) { lastEnvKey = key; scheduleEnv(); }
+}
+let envTimer = 0;
+function scheduleEnv() {
+  clearTimeout(envTimer);
+  envTimer = setTimeout(() => {
+    const rt = pmrem.fromScene(envScene, 0, 0.1, 5000);
+    if (envRT) envRT.dispose(); envRT = rt; scene.environment = rt.texture;
+  }, state.playing ? 400 : 60);
+}
+
+/* ---------------- row motion ---------------- */
+let driveAngle = 0, followerTrue = 0, flutter = 0;
+function setRowAngles(followerOverride) {
+  driveAngle = trackerAngle(sunDir);
+  rows.forEach(r => { r.tilt.rotation.z = -driveAngle * D2R; });
+  const base = followerOverride ?? (driveAngle + state.drift);
+  flutter = (Math.random() - 0.5) * 2 * 0.012 * state.wind;     // torsional flutter, deg
+  followerTrue = THREE.MathUtils.clamp(base, -MAX_TILT - 5, MAX_TILT + 5) + flutter;
+  follower.tilt.rotation.z = -followerTrue * D2R;
+}
+
+/* ---------------- sensor pipeline ---------------- */
+const hdrRT = new THREE.WebGLRenderTarget(SENSOR_W, SENSOR_H, { type: THREE.HalfFloatType, samples: 4 });
+const ldrRT = new THREE.WebGLRenderTarget(SENSOR_W, SENSOR_H);
+const quadCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const quadMat = new THREE.ShaderMaterial({
+  uniforms: { tHdr: { value: hdrRT.texture }, exposure: { value: 1 } },
+  vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }",
+  fragmentShader: `
+    uniform sampler2D tHdr; uniform float exposure; varying vec2 vUv;
+    vec3 RRTAndODTFit(vec3 v){ vec3 a = v*(v+0.0245786)-0.000090537; vec3 b = v*(0.983729*v+0.4329510)+0.238081; return a/b; }
+    vec3 aces(vec3 c){
+      const mat3 i = mat3(vec3(0.59719,0.07600,0.02840), vec3(0.35458,0.90834,0.13383), vec3(0.04823,0.01566,0.83777));
+      const mat3 o = mat3(vec3(1.60475,-0.10208,-0.00327), vec3(-0.53108,1.10813,-0.07276), vec3(-0.07367,-0.00605,1.07602));
+      c = i * (c / 0.6); c = RRTAndODTFit(c); c = o * c; return clamp(c, 0., 1.);
+    }
+    vec3 toSRGB(vec3 c){ return mix(c*12.92, 1.055*pow(c, vec3(1./2.4)) - 0.055, step(0.0031308, c)); }
+    void main(){ vec3 c = texture2D(tHdr, vUv).rgb * exposure; gl_FragColor = vec4(toSRGB(aces(c)), 1.); }`,
+  depthTest: false, depthWrite: false,
+});
+const quadScene = new THREE.Scene(); quadScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), quadMat));
+const rawBuf = new Uint8Array(SENSOR_W * SENSOR_H * 4);
+const N = SENSOR_W * SENSOR_H;
+
+function captureRGB(flashOn, fixedExposure) {
+  // render the sensor camera through the same ACES curve the main view uses, read 8-bit pixels (top row first)
+  M.pink.emissiveIntensity = M.yellow.emissiveIntensity = flashOn ? 2.2 : 0;   // retroreflective return
+  flashLight.intensity = flashOn ? 60 : 0;
+  const prevBg = scene.background;
+  renderer.setRenderTarget(hdrRT); renderer.render(scene, sensorCam);
+  quadMat.uniforms.exposure.value = fixedExposure ?? state.exposure;
+  renderer.setRenderTarget(ldrRT); renderer.render(quadScene, quadCam);
+  renderer.readRenderTargetPixels(ldrRT, 0, 0, SENSOR_W, SENSOR_H, rawBuf);
+  renderer.setRenderTarget(null);
+  M.pink.emissiveIntensity = M.yellow.emissiveIntensity = 0; flashLight.intensity = 0;
+  scene.background = prevBg;
+  const img = new Float32Array(N * 3);
+  for (let y = 0; y < SENSOR_H; y++) {
+    const src = (SENSOR_H - 1 - y) * SENSOR_W * 4, dst = y * SENSOR_W * 3;
+    for (let x = 0; x < SENSOR_W; x++) {
+      img[dst + x * 3] = rawBuf[src + x * 4]; img[dst + x * 3 + 1] = rawBuf[src + x * 4 + 1]; img[dst + x * 3 + 2] = rawBuf[src + x * 4 + 2];
+    }
+  }
+  return img;
+}
+
+let dustMap = null, dustLevel = -1;
+function buildDust() {
+  dustMap = new Float32Array(N); dustLevel = state.dust;
+  let r = 777; const rand = () => (r = (r * 16807) % 2147483647) / 2147483647;
+  const spots = Math.round(state.dust * 1.6);
+  for (let s = 0; s < spots; s++) {
+    const cx = rand() * SENSOR_W, cy = rand() * SENSOR_H, rad = 6 + rand() * 30, a = 0.15 + rand() * 0.45;
+    const x0 = Math.max(0, cx - rad * 2 | 0), x1 = Math.min(SENSOR_W, cx + rad * 2 | 0), y0 = Math.max(0, cy - rad * 2 | 0), y1 = Math.min(SENSOR_H, cy + rad * 2 | 0);
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+      const d2 = ((x - cx) ** 2 + (y - cy) ** 2) / (rad * rad); dustMap[y * SENSOR_W + x] += a * Math.exp(-d2);
+    }
+  }
+}
+function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+
+function sensorEffects(img, { gain = state.exposure, autoExposure = true } = {}) {
+  // veiling glare from the sun near the field of view, lens dust haze, auto exposure feedback, read + shot noise, 8-bit clip
+  if (dustLevel !== state.dust) buildDust();
+  const fwd = new THREE.Vector3(); sensorCam.getWorldDirection(fwd);
+  const sunAng = Math.acos(THREE.MathUtils.clamp(fwd.dot(sunDir), -1, 1)) / D2R;
+  const sunUp = sunDir.y > 0;
+  let glare = 0, sx = -1, sy = -1;
+  if (sunUp && sunAng < 55) {
+    glare = Math.pow((55 - sunAng) / 55, 2.2) * THREE.MathUtils.smoothstep(Math.asin(sunDir.y) / D2R, -1, 6);
+    const p = sunDir.clone().multiplyScalar(1000).add(sensorCam.position).project(sensorCam);
+    sx = (p.x * 0.5 + 0.5) * SENSOR_W; sy = (1 - (p.y * 0.5 + 0.5)) * SENSOR_H;
+  }
+  const haze = state.dust / 100 * 0.35;
+  let sum = 0;
+  for (let i = 0; i < N; i++) sum += img[i * 3] * 0.3 + img[i * 3 + 1] * 0.59 + img[i * 3 + 2] * 0.11;
+  const mean = sum / N;
+  const veil = mean * (0.6 + 1.6 * glare);
+  // read noise is set in the sensor, before gain, so it grows with the exposure the camera needs
+  const readNoise = state.noise * Math.max(1, gain / 0.2);
+  for (let y = 0; y < SENSOR_H; y++) for (let x = 0; x < SENSOR_W; x++) {
+    const i = y * SENSOR_W + x, k = i * 3;
+    let flare = 0;
+    if (glare > 0) { const d = Math.hypot(x - sx, y - sy) / SENSOR_W; flare = glare * (420 * Math.exp(-d * 5) + 90); }
+    const dm = dustMap[i];
+    const h = Math.min(0.9, haze + dm * 0.5 + glare * 0.25);
+    for (let c = 0; c < 3; c++) {
+      let v = img[k + c];
+      v = v * (1 - h) + veil * h * (1 + dm) + flare;
+      v += gauss() * (readNoise + 0.12 * Math.sqrt(Math.max(v, 0)));
+      img[k + c] = v < 0 ? 0 : v > 255 ? 255 : v;
+    }
+  }
+  // auto exposure for the next frame (keeps mean brightness near mid-grey, so glare darkens the markers)
+  if (!autoExposure) return { glare, sunAng };
+  let s2 = 0; for (let i = 0; i < N; i++) s2 += img[i * 3] * 0.3 + img[i * 3 + 1] * 0.59 + img[i * 3 + 2] * 0.11;
+  const m2 = s2 / N; const target = 112;
+  state.exposure = THREE.MathUtils.clamp(state.exposure * Math.pow(target / Math.max(m2, 1), 0.6), 0.05, 40);
+  return { glare, sunAng };
+}
+
+function findMarkers(img) {
+  // color subtraction: yellow = min(R,G) - B, pink = min(R,B) - G. Keep pixels over the threshold and over 45% of the peak score.
+  const ys = new Float32Array(N), ps = new Float32Array(N);
+  let yMax = 0, pMax = 0;
+  for (let i = 0; i < N; i++) {
+    const r = img[i * 3], g = img[i * 3 + 1], b = img[i * 3 + 2];
+    const y = Math.min(r, g) - b, p = Math.min(r, b) - g;
+    ys[i] = y; ps[i] = p; if (y > yMax) yMax = y; if (p > pMax) pMax = p;
+  }
+  const blob = (sc, mx) => {
+    const t = Math.max(state.tol, mx * 0.45); let w = 0, sx = 0, sy = 0, sxx = 0, syy = 0, n = 0;
+    for (let i = 0; i < N; i++) if (sc[i] > t) {
+      const v = sc[i] - t, x = i % SENSOR_W, y = (i / SENSOR_W) | 0;
+      w += v; sx += v * x; sy += v * y; sxx += v * x * x; syy += v * y * y; n++;
+    }
+    if (n < 6) return { n, t };
+    const cx = sx / w, cy = sy / w, spread = Math.sqrt(Math.max(0, sxx / w - cx * cx) + Math.max(0, syy / w - cy * cy));
+    // a real marker is one compact blob; scattered noise pixels are rejected
+    return spread < 25 ? { x: cx, y: cy, n, t } : { n: 0, t };
+  };
+  return { yellow: blob(ys, yMax), pink: blob(ps, pMax), ys, ps };
+}
+
+function measureOnce({ draw = false } = {}) {
+  let img;
+  // the flash only helps once it's dark; in daylight the sun swamps it, so use plain color then
+  if (state.flash && sunDir.y < 0.03) {
+    // flash pair: fixed short exposure so the retroreflective return stays colored instead of clipping to white
+    const FLASH_EXP = 0.35;
+    const lit = captureRGB(true, FLASH_EXP), dark = captureRGB(false, FLASH_EXP);
+    var fx = sensorEffects(lit, { gain: FLASH_EXP, autoExposure: false }); sensorEffects(dark, { gain: FLASH_EXP, autoExposure: false });
+    img = new Float32Array(N * 3);
+    for (let i = 0; i < N * 3; i++) img[i] = Math.max(0, lit[i] - dark[i]);
+    if (draw) drawFeed(lit);
+  } else {
+    img = captureRGB(false);
+    fx = sensorEffects(img);
+    if (draw) drawFeed(img);
+  }
+  const mk = findMarkers(img);
+  if (draw) drawMask(mk);
+  const found = mk.yellow.x !== undefined && mk.pink.x !== undefined;
+  return { found, feature: found ? mk.yellow.y - mk.pink.y : NaN, pinkY: mk.pink.y ?? NaN, mk, fx: fx || { glare: 0 } };
+}
+
+/* feed + mask drawing */
+const feedCtx = $("feed").getContext("2d"), maskCtx = $("mask").getContext("2d");
+const feedImg = feedCtx.createImageData(SENSOR_W, SENSOR_H), maskImg = maskCtx.createImageData(SENSOR_W, SENSOR_H);
+function drawFeed(img) {
+  for (let i = 0; i < N; i++) { feedImg.data[i * 4] = img[i * 3]; feedImg.data[i * 4 + 1] = img[i * 3 + 1]; feedImg.data[i * 4 + 2] = img[i * 3 + 2]; feedImg.data[i * 4 + 3] = 255; }
+  feedCtx.putImageData(feedImg, 0, 0);
+}
+function drawMask(mk) {
+  for (let i = 0; i < N; i++) {
+    const y = mk.ys[i] > mk.yellow.t, p = mk.ps[i] > mk.pink.t;
+    maskImg.data[i * 4] = y || p ? 255 : 10; maskImg.data[i * 4 + 1] = y ? 210 : p ? 79 : 12; maskImg.data[i * 4 + 2] = y ? 26 : p ? 160 : 16; maskImg.data[i * 4 + 3] = 255;
+  }
+  maskCtx.putImageData(maskImg, 0, 0);
+  const cross = (ctx, b, col) => { if (b.x === undefined) return; ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(b.x - 18, b.y); ctx.lineTo(b.x + 18, b.y); ctx.moveTo(b.x, b.y - 18); ctx.lineTo(b.x, b.y + 18); ctx.stroke(); };
+  [feedCtx, maskCtx].forEach(c => { cross(c, mk.yellow, "#ffd21a"); cross(c, mk.pink, "#ff4fa0"); });
+  if (mk.yellow.x !== undefined && mk.pink.x !== undefined) {
+    maskCtx.strokeStyle = "#ffffff"; maskCtx.setLineDash([6, 6]); maskCtx.lineWidth = 2;
+    maskCtx.beginPath(); maskCtx.moveTo(mk.pink.x, mk.pink.y); maskCtx.lineTo(mk.yellow.x, mk.yellow.y); maskCtx.stroke(); maskCtx.setLineDash([]);
+  }
+}
+
+/* ---------------- teach + estimate ---------------- */
+function interpAll(table, key, v) {
+  // every angle in the (angle-ordered) table whose segment spans value v
+  const out = [];
+  for (let i = 1; i < table.length; i++) {
+    const a = table[i - 1], b = table[i], lo = Math.min(a[key], b[key]), hi = Math.max(a[key], b[key]);
+    if (v >= lo && v <= hi) { const u = (v - a[key]) / ((b[key] - a[key]) || 1); out.push(a.a + u * (b.a - a.a)); }
+  }
+  return out;
+}
+function estimate(m) {
+  // 1) the near-edge pink marker is never hidden by the module, so its image row gives a coarse angle
+  // 2) the yellow-minus-pink gap cancels camera-post sway; use the gap reading closest to the coarse angle
+  const t = state.table; if (!t || !m.found) return null;
+  const coarse = interpAll(t, "p", m.pinkY);
+  if (!coarse.length) {
+    const end = Math.abs(t[0].p - m.pinkY) < Math.abs(t[t.length - 1].p - m.pinkY) ? t[0] : t[t.length - 1];
+    return { angle: end.a, outside: true, via: "pink" };
+  }
+  const c = coarse[0];
+  const fine = interpAll(t, "f", m.feature).sort((x, y) => Math.abs(x - c) - Math.abs(y - c));
+  if (fine.length && Math.abs(fine[0] - c) < 1.5) return { angle: fine[0], outside: false, via: "gap" };
+  return { angle: c, outside: false, via: "pink" };
+}
+const frame = () => new Promise(r => setTimeout(r, 0));   // yield so the progress bar paints
+function settleExposure() { for (let i = 0; i < 4; i++) measureOnce(); }
+
+async function teach() {
+  if (state.busy) return; state.busy = true; toggleButtons(true);
+  const pts = []; settleExposure();
+  for (let a = -MAX_TILT, i = 0; a <= MAX_TILT + 1e-6; a += 2, i++) {
+    setRowAngles(a);
+    const reads = []; for (let k = 0; k < 3; k++) { const m = measureOnce({ draw: k === 2 }); if (m.found) reads.push(m); }
+    if (reads.length) pts.push({ a, f: reads.reduce((s, m) => s + m.feature, 0) / reads.length, p: reads.reduce((s, m) => s + m.pinkY, 0) / reads.length });
+    $("progress").style.width = ((a + MAX_TILT) / (2 * MAX_TILT) * 100) + "%";
+    if (i % 2 === 0) await frame();
+  }
+  if (pts.length < 2) {
+    state.table = null;
+    $("result").innerHTML = `<strong>Teaching failed at ${fmtTime(state.time)}</strong>: the markers weren't visible at ${61 - pts.length} of 61 angles.\n` +
+      (sunDir.y <= 0 && !state.flash ? "It's dark. Turn on the retroreflective markers + LED flash." : "Check glare, dust and the color threshold.");
+    $("progress").style.width = "0%"; state.busy = false; toggleButtons(false); return;
+  }
+  state.table = pts;   // ordered by angle
+  let folds = 0; for (let i = 2; i < pts.length; i++) if (Math.sign(pts[i].f - pts[i - 1].f) !== Math.sign(pts[i - 1].f - pts[i - 2].f)) folds++;
+  $("result").innerHTML = `<strong>Taught ${pts.length} of 61 angles</strong> at solar time ${fmtTime(state.time)}.\n` +
+    `Marker gap runs ${Math.min(...pts.map(q => q.f)).toFixed(0)} to ${Math.max(...pts.map(q => q.f)).toFixed(0)} px across the sweep.\n` +
+    (pts.length < 55 ? "Some angles had no markers in view. Try another time of day or turn on the flash.\n" : "") +
+    (folds ? `The gap folds back ${folds}× near edge-on, where the module hides part of the far marker. The near pink marker picks the right branch there.` : "The gap is one-to-one across the sweep.");
+  $("progress").style.width = "0%"; state.busy = false; toggleButtons(false);
+}
+
+async function runTest() {
+  if (!state.table) { $("result").textContent = "Teach first, then run the test."; return; }
+  if (state.busy) return; state.busy = true; toggleButtons(true);
+  const errs = []; let missed = 0; settleExposure();
+  for (let i = 0; i < 40; i++) {
+    const a = -55 + Math.random() * 110;
+    setRowAngles(a);
+    const m = measureOnce({ draw: i % 5 === 0 });
+    const e = estimate(m);
+    if (!e) missed++; else errs.push(Math.abs(e.angle - followerTrue));
+    $("progress").style.width = ((i + 1) / 40 * 100) + "%";
+    if (i % 2 === 0) await frame();
+  }
+  errs.sort((p, q) => p - q);
+  const p95 = errs.length ? errs[Math.min(errs.length - 1, Math.floor(errs.length * 0.95))] : NaN;
+  const within = errs.filter(e => e <= 1).length;
+  $("result").innerHTML = `<strong>40 random angles at ${fmtTime(state.time)}</strong>\n` +
+    `Markers found   ${40 - missed}/40\n` +
+    `Median error    ${errs.length ? errs[Math.floor(errs.length / 2)].toFixed(2) : "–"}°\n` +
+    `95% within      ${isFinite(p95) ? p95.toFixed(2) : "–"}°\n` +
+    `Max error       ${errs.length ? errs[errs.length - 1].toFixed(2) : "–"}°\n` +
+    `Within ±1°      ${within}/${40 - missed}` + (missed ? "\nMissed readings would hold the last good value in the field." : "");
+  $("progress").style.width = "0%"; state.busy = false; toggleButtons(false);
+}
+function toggleButtons(b) { $("teach").disabled = $("test").disabled = b; }
+
+/* ---------------- UI ---------------- */
+const fmtTime = (h) => { const hh = Math.floor(h), mm = Math.round((h - hh) * 60); return `${String(hh).padStart(2, "0")}:${String(mm % 60).padStart(2, "0")}`; };
+const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], mdays = [31,28,31,30,31,30,31,31,30,31,30,31];
+const fmtDay = (d) => { let m = 0; while (d > mdays[m]) { d -= mdays[m]; m++; } return `${months[m]} ${d}`; };
+const sign = (v, d = 1) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d) + "°";
+function syncOutputs() {
+  $("o-time").textContent = fmtTime(state.time); $("o-day").textContent = fmtDay(state.day);
+  $("o-gap").textContent = state.gap.toFixed(1) + " m"; $("o-drift").textContent = sign(state.drift);
+  $("o-wind").textContent = state.wind.toFixed(1) + " m/s"; $("o-dust").textContent = state.dust + "%";
+  $("o-noise").textContent = state.noise.toFixed(1) + " DN"; $("o-tol").textContent = state.tol;
+}
+function setStatus(text, kind) { const s = $("status"); s.textContent = text; s.className = "status s-" + kind; }
+
+const bind = (id, key, fn) => $(id).addEventListener("input", (e) => { state[key] = +e.target.value; syncOutputs(); fn && fn(); });
+bind("time", "time", updateSun); bind("day", "day", updateSun);
+bind("gap", "gap", layout); bind("drift", "drift"); bind("wind", "wind"); bind("dust", "dust"); bind("noise", "noise"); bind("tol", "tol");
+$("facing").addEventListener("change", (e) => { state.facing = +e.target.value; layout(); });
+$("flash").addEventListener("change", (e) => { state.flash = e.target.checked; });
+$("teach").addEventListener("click", teach);
+$("test").addEventListener("click", runTest);
+$("play").addEventListener("click", () => { state.playing = !state.playing; $("play").textContent = state.playing ? "Pause" : "Play day"; });
+
+function hud(m) {
+  const el = Math.asin(sunDir.y) / D2R, az = (Math.atan2(sunDir.x, -sunDir.z) / D2R + 360) % 360;
+  $("hud").innerHTML =
+    `<span class="chip">Sun <b>${el.toFixed(1)}°</b> elev · <b>${az.toFixed(0)}°</b> az</span>` +
+    `<span class="chip">${fmtDay(state.day)} · ${fmtTime(state.time)}</span>` +
+    (m && m.fx.glare > 0.05 ? `<span class="chip" style="color:var(--warn)">Sun near camera view</span>` : "");
+}
+
+function resize() {
+  const v = canvas.parentElement, w = v.clientWidth, h = v.clientHeight;
+  renderer.setSize(w, h, false); view.aspect = w / h; view.updateProjectionMatrix();
+}
+addEventListener("resize", resize);
+
+/* ---------------- main loop ---------------- */
+let lastSense = 0, lastT = performance.now();
+function tick(now) {
+  const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+  if (state.playing && !state.busy) {
+    state.time += dt * 0.25; if (state.time > 19.5) state.time = 4.5;
+    $("time").value = state.time; syncOutputs(); updateSun();
+  }
+  if (!state.busy) {
+    // camera post sway from wind
+    const sway = 0.02 * state.wind * D2R;
+    sensorCam.lookAt(sensorCam.userData.aim);
+    sensorCam.rotateX(gauss() * sway * 0.4); sensorCam.rotateY(gauss() * sway * 0.4);
+    sensorCam.updateMatrixWorld();
+    setRowAngles();
+    if (now - lastSense > 220) {
+      lastSense = now;
+      const m = measureOnce({ draw: true });
+      readout(m); hud(m);
+    }
+  }
+  controls.update();
+  renderer.render(scene, view);
+  requestAnimationFrame(tick);
+}
+
+function readout(m) {
+  $("r-drive").textContent = sign(driveAngle);
+  $("r-true").textContent = sign(followerTrue, 2);
+  $("r-mis-true").textContent = sign(followerTrue - driveAngle, 2);
+  $("r-found").textContent = `${m.mk.pink.n ?? 0} pink · ${m.mk.yellow.n ?? 0} yellow px`;
+  const night = sunDir.y <= 0;
+  if (!m.found) {
+    $("r-est").textContent = "–"; $("r-mis-est").textContent = "–"; $("r-err").textContent = "–";
+    setStatus(night && !state.flash ? "Too dark" : m.fx.glare > 0.2 ? "Sun glare" : "Markers lost", "bad"); return;
+  }
+  const e = estimate(m);
+  if (!e) { $("r-est").textContent = `${m.feature.toFixed(1)} px`; $("r-mis-est").textContent = "–"; $("r-err").textContent = "–"; setStatus("Not taught", "idle"); return; }
+  const err = e.angle - followerTrue;
+  $("r-est").textContent = sign(e.angle, 2);
+  $("r-mis-est").textContent = sign(e.angle - driveAngle, 2);
+  $("r-err").textContent = sign(err, 2);
+  $("r-err").style.color = Math.abs(err) <= 1 ? "var(--ok)" : "var(--bad)";
+  $("r-found").textContent += e.via === "pink" ? " · pink only" : "";
+  if (e.outside) setStatus("Outside taught range", "warn");
+  else if (m.fx.glare > 0.2) setStatus("Within spec · glare", Math.abs(err) <= 1 ? "warn" : "bad");
+  else setStatus(Math.abs(err) <= 1 ? "Within ±1°" : "Out of spec", Math.abs(err) <= 1 ? "ok" : "bad");
+}
+
+/* ---------------- start ---------------- */
+window.simState = state;   // handy for poking at the sim from the browser console
+syncOutputs(); layout(); updateSun(); resize();
+scene.environment = null;
+envRT = pmrem.fromScene(envScene, 0, 0.1, 5000); scene.environment = envRT.texture;
+$("loading").hidden = true;
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
