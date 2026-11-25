@@ -1,15 +1,13 @@
-This is a template to help you get started with the team's GitHub Report. Use this template to help guide your team through the initial setup process.
+# Team 20 · Solar Tracker Tilt-Sensing System
 
-You will need to add additional files per team assignment.
-# Remove ALL unused ITEMS currently in the Appendix before submitting the report for the External review!
-The three items currently there are placeholders and could serve as possible resources.
+Project website for Team 20 (EGR 401/402 Senior Capstone, ASU Polytechnic), sponsored by ARRAY Technologies.
 
-## Tips if the template does not initially publish/update correctly:
-If, after checking these [settings](https://embedded-systems-design.github.io/fork-report-website/#settings-to-check/), you often find that renaming the workflow file initiates builds (for whatever reason).
+Built with [MkDocs Material](https://squidfunk.github.io/mkdocs-material/). Pages live in `docs/`, navigation in `mkdocs.yml`.
+Every push to `main` builds the site and deploys it to the `gh-pages` branch through `.github/workflows/main.yml`.
 
-Either on your computer or on the GitHub website,
-1. Navigate to the files of your repository in the .github/workflows/.
-1. Rename **pages.yml** to something else (**main.yml** worked for me).
-1 Stage, commit, and push your files.
-1. Check the "actions" tab (found in your repository's main GitHub page) to see that your commit is triggering the **"mkdocs-build"** action.
-A video detailing the steps to check your build process can be viewed [here.](https://www.youtube.com/watch?v=8EgFkG2HHxM/) 
+## Preview locally
+
+```bash
+pip install -r requirements.txt
+mkdocs serve
+```

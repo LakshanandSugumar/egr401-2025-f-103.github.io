@@ -1,36 +1,67 @@
-site_name: EGR304 Team Report Template
-site_url: https://embedded-systems-design.github.io/EGR304TeamTemplate
-repo_url: https://github.com/embedded-systems-design/EGR304TeamTemplate
+site_name: Team 20 · Solar Tracker Tilt Sensing
+site_description: A sub-$10 tilt sensor for solar tracker rows that needs no power on the follower row. EGR 401/402 Senior Capstone, ASU Polytechnic.
+site_url: https://lakshanandsugumar.github.io/egr401-2025-f-103.github.io/
+repo_url: https://github.com/LakshanandSugumar/egr401-2025-f-103.github.io
+repo_name: Team 20 site source
 edit_uri: edit/main/docs/
+
 theme:
   name: material
   custom_dir: custom_theme/
+  logo: static/logo.svg
+  favicon: static/logo.svg
+  icon:
+    repo: fontawesome/brands/github
   palette:
-    primary: blue
-    accent: indigo
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep orange
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep orange
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
   font:
-    text: Roboto
-  logo: static/logo304.svg
-  favicon: static/logo304.png
-
+    text: Inter
+    code: JetBrains Mono
   features:
     - navigation.tabs
     - navigation.tabs.sticky
-    - toc.follow    
     - navigation.top
-    - navigation.path
-    - navigation.indexes
-    - navigation.prune
-    - content.action.edit
     - navigation.footer
-#    - navigation.sections
-#    - navigation.expand
-#    - navigation.instant # doesn't work that well
+    - navigation.indexes
+    - toc.follow
+    - content.tabs.link
+
+nav:
+  - Home: index.md
+  - The Problem: problem.md
+  - Our Solution: solution.md
+  - Design Decisions: decisions.md
+  - Technology: technology.md
+  - Budget & Unit Cost: budget.md
+  - Milestones: milestones.md
+  - Team: team.md
+  - Status: status.md
 
 markdown_extensions:
-  - attr_list #add attributes using curly brackets to images, see https://squidfunk.github.io/mkdocs-material/reference/images/
-  - md_in_html # see https://squidfunk.github.io/mkdocs-material/reference/images/
+  - attr_list
+  - md_in_html
   - footnotes
+  - tables
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.arithmatex:
       generic: true
   - pymdownx.tilde: {}
@@ -43,27 +74,22 @@ markdown_extensions:
 draft_docs: |
   **/*_unpublished.md
   **/*_draft.md
-  **/*_draft**
-  
+
 plugins:
   - search
-  - glightbox # allow resize images, see https://squidfunk.github.io/mkdocs-material/reference/images/
+  - glightbox
 
 extra_css:
-  - stylesheets/extra.css  
+  - stylesheets/extra.css
 
 extra_javascript:
- - javascripts/mathjax.js
- - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
-    
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
+
 not_in_nav: |
   static
-  
-copyright: "Copyright &copy; 2025 team-name-here"
+
+copyright: "Copyright &copy; 2026 Team 20 · Arizona State University, Polytechnic"
 
 extra:
   generator: false
-  social:
-    - icon: fontawesome/regular/file-code
-      link: /2025_fall
-      name: 2023 Site    
