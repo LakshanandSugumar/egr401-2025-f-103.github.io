@@ -161,6 +161,15 @@
         <dt>Heat shimmer</dt><dd id="p-shimmer">–</dd>
         <dt>Light on site</dt><dd id="p-lux">–</dd>
         <dt>Camera exposure</dt><dd id="p-exp">–</dd>
+        <dt>Visibility</dt><dd id="p-vis">–</dd>
+        <dt>Precipitation</dt><dd id="p-precip">–</dd>
+        <dt>Hail impact on window</dt><dd id="p-hail">–</dd>
+        <dt>Camera sensor temperature</dt><dd id="p-temp">–</dd>
+        <dt>Torsional damping (structure + wind)</dt><dd id="p-gallop">–</dd>
+        <dt>Linkage backlash + flex</dt><dd id="p-link">–</dd>
+        <dt>Motion blur of markers</dt><dd id="p-blur">–</dd>
+        <dt>Marker color left after UV</dt><dd id="p-fade">–</dd>
+        <dt>Glow brightness</dt><dd id="p-glowL">–</dd>
       </dl>
     </section>
 
@@ -169,6 +178,7 @@
       <div class="row">
         <button id="teach" class="primary">Teach: sweep −60° to +60°</button>
         <button id="test">Run 40-angle test</button>
+        <button id="diag">Find marker losses</button>
       </div>
       <div class="bar" style="margin-top:8px"><i id="progress"></i></div>
       <div class="result" id="result" style="margin-top:8px">Teach first. The sweep tilts the follower row in 2° steps and records where the pink and yellow markers land in the image, against the true angle at the markers, like the on-site calibration with the reference inclinometer.</div>
@@ -206,12 +216,62 @@
       <div class="ctrl"><label for="dust">Dust on the lens</label><output id="o-dust"></output>
         <input id="dust" type="range" min="0" max="100" step="1" value="10"></div>
       <div class="ctrl"><label for="noise">Sensor read noise</label><output id="o-noise"></output>
-        <input id="noise" type="range" min="0" max="12" step="0.5" value="3"></div>
-      <div class="ctrl"><label for="tol">Color threshold</label><output id="o-tol"></output>
-        <input id="tol" type="range" min="10" max="120" step="1" value="38"></div>
+        <input id="noise" type="range" min="1" max="12" step="0.5" value="4"><small>Electrons. Shot noise and dark current are added from the physics.</small></div>
+      <div class="ctrl"><label for="tol">Minimum color threshold</label><output id="o-tol"></output>
+        <input id="tol" type="range" min="4" max="80" step="1" value="12"><small>The detector raises it automatically above the image noise</small></div>
       <div class="ctrl"><label for="led">Flash LED intensity</label><output id="o-led"></output>
         <input id="led" type="range" min="2" max="60" step="1" value="20"><small>On-axis luminous intensity. Only used after dark with the flash on.</small></div>
-      <label class="check"><input id="flash" type="checkbox"><span>Retroreflective markers + LED flash<small>After dark, takes a frame with and without the flash and subtracts them. In daylight the camera uses plain color.</small></span></label>
+      <label class="check"><input id="flash" type="checkbox" checked><span>Retroreflective markers + LED flash<small>After dark, takes a frame with and without the flash and subtracts them. In daylight the camera uses plain color.</small></span></label>
+    </section>
+
+    <section>
+      <h2>Weather</h2>
+      <div class="ctrl"><label for="weather">Conditions</label><output id="o-weather"></output>
+        <select id="weather" style="grid-column:1/-1">
+          <option value="clear">Clear</option>
+          <option value="windy">Windy (14 m/s)</option>
+          <option value="rain">Light rain</option>
+          <option value="storm">Monsoon thunderstorm</option>
+          <option value="hail">Hail</option>
+          <option value="snow">Snow</option>
+          <option value="dust">Dust storm (haboob)</option>
+          <option value="fog">Fog</option>
+        </select></div>
+      <div class="ctrl"><label for="wint">Intensity</label><output id="o-wint"></output>
+        <input id="wint" type="range" min="0" max="100" step="5" value="100"></div>
+      <div class="ctrl"><label for="temp">Air temperature</label><output id="o-temp"></output>
+        <input id="temp" type="range" min="-10" max="50" step="1" value="40"></div>
+    </section>
+
+    <section>
+      <h2>Aging and mechanics</h2>
+      <div class="ctrl"><label for="years">Years in the field</label><output id="o-years"></output>
+        <input id="years" type="range" min="0" max="10" step="0.5" value="0"><small>UV fades marker color and retroreflection</small></div>
+      <div class="ctrl"><label for="mat">Marker material</label><output></output>
+        <select id="mat" style="grid-column:1/-1">
+          <option value="prism">Prismatic retroreflective sheeting (10-year rated)</option>
+          <option value="vinyl">Standard colored vinyl</option>
+          <option value="fluor">Fluorescent vinyl tape</option>
+        </select></div>
+      <div class="ctrl"><label for="msize">Marker size</label><output id="o-msize"></output>
+        <input id="msize" type="range" min="10" max="30" step="5" value="10"></div>
+      <div class="ctrl"><label for="backlash">Drive linkage backlash</label><output id="o-backlash"></output>
+        <input id="backlash" type="range" min="0" max="1" step="0.05" value="0.3"></div>
+      <div class="ctrl"><label for="kdist">Lens barrel distortion (k₁)</label><output id="o-kdist"></output>
+        <input id="kdist" type="range" min="-0.4" max="0" step="0.01" value="-0.25"></div>
+    </section>
+
+    <section>
+      <h2>Fixes</h2>
+      <label class="check"><input id="hood" type="checkbox" checked><span>Lens hood + water-shedding window coating<small>Fewer and smaller drops and flakes stick to the window</small></span></label>
+      <label class="check"><input id="median" type="checkbox" checked><span>Multi-frame filter<small>Median of 3 frames, or 7 in rain, hail or snow, rejects drops and flakes passing through the view</small></span></label>
+      <label class="check"><input id="undistort" type="checkbox" checked><span>Lens distortion correction<small>Marker centers are undistorted with the calibrated k₁</small></span></label>
+      <label class="check"><input id="pulse" type="checkbox" checked><span>2 ms flash pulse<small>Flash frames freeze motion instead of a long exposure</small></span></label>
+      <label class="check"><input id="stow30" type="checkbox" checked><span>High-wind stow at 30° instead of flat<small>Avoids the flat angles where torsional galloping starts</small></span></label>
+      <label class="check"><input id="dampers" type="checkbox"><span>Torsional dampers on the follower<small>Raises structural damping from 3% to 10%</small></span></label>
+      <label class="check"><input id="caps" type="checkbox" checked><span>Snow caps over the markers<small>Small 3D-printed hoods keep snow from building up on the marker faces</small></span></label>
+      <label class="check"><input id="pinkfb" type="checkbox" checked><span>Near-marker fallback<small>When the torque tube blocks the far marker, read the angle from the near pink marker alone</small></span></label>
+      <label class="check"><input id="glow" type="checkbox"><span>Glow-in-the-dark marker cores<small>Strontium aluminate that charges in sunlight and glows at night. Camera switches to long exposures after dark.</small></span></label>
     </section>
 
     <section>
@@ -265,10 +325,11 @@ const LUX_TO_SCENE = 3.4e-5;             // renderer units per lux (100 klx sun 
 const RA_SHEET = 250;                    // retroreflection coefficient of prismatic sheeting, cd/(lx m^2)
 const X0 = 0.1, T0 = 1 / 8000, TMAX = 1 / 15, GMAX = 16;   // sensor exposure model
 const XMAX = X0 * (TMAX / T0) * GMAX;
+const DARK_E25 = 30;   // dark current, electrons per second at 25 C (representative small CMOS)
 // flash frames: firmware sets exposure so the expected retroreflected return lands mid-scale (limited by shutter and gain)
 function flashExposure() {
   const d = sensorCam.position.distanceTo(sensorCam.userData.aim);
-  const Lretro = RA_SHEET * state.led / (d * d);
+  const Lretro = Math.max(raNow(), 1) * state.led / (d * d);
   return THREE.MathUtils.clamp(0.6 / (Lretro * LUX_TO_SCENE), X0, XMAX);
 }
 
@@ -276,7 +337,9 @@ const $ = (id) => document.getElementById(id);
 const state = {
   time: +$("time").value, day: +$("day").value, gap: +$("gap").value, drift: +$("drift").value, mz: +$("mz").value,
   wind: +$("wind").value, wdir: +$("wdir").value, dust: +$("dust").value, led: +$("led").value, noise: +$("noise").value, tol: +$("tol").value,
-  facing: +$("facing").value, flash: false, playing: false, table: null, busy: false, exposure: 0.2,
+  facing: +$("facing").value, flash: true, playing: false, table: null, busy: false, exposure: 0.2,
+  weather: "clear", wint: 1, temp: 40, years: 0, mat: "prism", backlash: 0.3, kdist: -0.25,
+  hood: true, median: true, undistort: true, pulse: true, stow30: true, dampers: false, pinkfb: true, glow: false, caps: true, msize: 10,
 };
 window.simState = state;   // handy for poking at the sim from the browser console
 
@@ -475,6 +538,127 @@ const sensorCam = new THREE.PerspectiveCamera(2 * Math.atan(Math.tan(HFOV / 2 * 
 const flashLight = new THREE.SpotLight(0xffffff, 0, 40, 18 * D2R, 0.4, 2);
 scene.add(flashLight, flashLight.target);
 
+/* ================= weather ================= */
+// cd: direct-beam fraction kept, cg: global light fraction under cloud; vis in m; rain mm/h; hail diameter mm; snow mm/h water
+const PRESETS = {
+  clear: { name: "Clear" },
+  windy: { name: "Windy", wind: 14 },
+  rain:  { name: "Light rain", rain: 4, wind: 5, cd: 0.1, cg: 0.35 },
+  storm: { name: "Monsoon thunderstorm", rain: 50, wind: 15, cd: 0, cg: 0.12 },
+  hail:  { name: "Hail", rain: 25, hail: 25, wind: 12, cd: 0, cg: 0.1, stow: 60 },
+  snow:  { name: "Snow", snow: 2, vis: 800, wind: 4, cd: 0, cg: 0.25, snowDepth: 6, stow: 60 },
+  dust:  { name: "Dust storm", vis: 60, wind: 18, cd: 0.15, cg: 0.35, lensDust: 0.45, tint: [0.78, 0.6, 0.42] },
+  fog:   { name: "Fog", vis: 120, wind: 1, cd: 0.2, cg: 0.5, tint: [0.8, 0.82, 0.85] },
+};
+const W = { rain: 0, hail: 0, snow: 0, vis: 40000, cd: 1, cg: 1, tint: [0.8, 0.84, 0.9], lensDust: 0, snowDepth: 0, stow: null, wet: 0 };
+function computeWeather() {
+  const P = PRESETS[state.weather], w = state.wint;
+  W.rain = (P.rain || 0) * w; W.hail = P.hail && w > 0 ? P.hail * (0.5 + 0.5 * w) : 0; W.snow = (P.snow || 0) * w;
+  const visOther = P.vis ? Math.exp(Math.log(40000) + w * (Math.log(P.vis) - Math.log(40000))) : 40000;
+  // rain extinction from Marshall-Palmer drop sizes: sigma ~ 0.21 R^0.74 per km
+  const sigma = 3.912 / visOther + (W.rain > 0 ? 0.21 * Math.pow(W.rain, 0.74) / 1000 : 0);
+  W.vis = 3.912 / sigma;
+  W.cd = 1 + ((P.cd ?? 1) - 1) * w; W.cg = 1 + ((P.cg ?? 1) - 1) * w;
+  W.tint = P.tint || [0.8, 0.84, 0.9];
+  W.lensDust = (P.lensDust || 0) * w; W.snowDepth = (P.snowDepth || 0) * w;
+  W.stow = P.stow && w > 0.2 ? P.stow : null; W.wet = Math.min(1, W.rain / 8);
+}
+function hailPhysics(dmm) {
+  // terminal velocity from drag balance (Cd 0.5), impact energy 1/2 m v^2
+  const d = dmm / 1000, m = 900 * Math.PI / 6 * d ** 3, A = Math.PI * d * d / 4;
+  const v = Math.sqrt(2 * m * 9.81 / (RHO_AIR * 0.5 * A));
+  return { v, E: 0.5 * m * v * v };
+}
+
+const PB = { x0: 0, x1: 8, z0: -10, z1: 10, y1: 7 };
+const N_RAIN = 6000, N_SNOW = 6000, N_HAIL = 700;
+const rainP = new Float32Array(N_RAIN * 3), snowP = new Float32Array(N_SNOW * 3), hailP = new Float32Array(N_HAIL * 3);
+const rainGeo = new THREE.BufferGeometry(); rainGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(N_RAIN * 6), 3));
+const rainMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6, depthWrite: false, fog: false });
+const rainLines = new THREE.LineSegments(rainGeo, rainMat); rainLines.frustumCulled = false; scene.add(rainLines);
+const snowGeo = new THREE.BufferGeometry(); snowGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(N_SNOW * 3), 3));
+const snowMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.03, sizeAttenuation: true, transparent: true, opacity: 0.95, depthWrite: false, fog: false });
+const snowPts = new THREE.Points(snowGeo, snowMat); snowPts.frustumCulled = false; scene.add(snowPts);
+const hailMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 10, 8), new THREE.MeshStandardMaterial({ color: 0xeef3f7, roughness: 0.25, transparent: true, opacity: 0.9 }), N_HAIL);
+hailMesh.frustumCulled = false; scene.add(hailMesh);
+const snowPlane = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), new THREE.MeshStandardMaterial({ color: 0xf2f5f9, roughness: 0.9, transparent: true, opacity: 0 }));
+snowPlane.rotation.x = -Math.PI / 2; snowPlane.position.y = 0.01; snowPlane.receiveShadow = true; scene.add(snowPlane);
+
+function spawn(arr, i, anyY) {
+  arr[i * 3] = PB.x0 + Math.random() * (PB.x1 - PB.x0);
+  arr[i * 3 + 1] = anyY ? Math.random() * PB.y1 : PB.y1;
+  arr[i * 3 + 2] = PB.z0 + Math.random() * (PB.z1 - PB.z0);
+}
+function respawnAll() { for (const [a, n] of [[rainP, N_RAIN], [snowP, N_SNOW], [hailP, N_HAIL]]) for (let i = 0; i < n; i++) spawn(a, i, true); }
+const _hm = new THREE.Matrix4();
+function stepWeather(dt) {
+  const vx = -Math.max(0, state.wind + wx.gust) * Math.cos(state.wdir * D2R);   // wind drift across the rows
+  const span = PB.x1 - PB.x0;
+  const move = (arr, n, vy, sway) => {
+    for (let i = 0; i < n; i++) {
+      let x = arr[i * 3] + vx * dt + (sway ? Math.sin(arr[i * 3 + 2] * 7 + i) * sway * dt : 0), y = arr[i * 3 + 1] + vy * dt;
+      if (y < 0) { spawn(arr, i, false); arr[i * 3 + 1] = PB.y1 + (y % PB.y1); continue; }
+      x = PB.x0 + (((x - PB.x0) % span) + span) % span;
+      arr[i * 3] = x; arr[i * 3 + 1] = y;
+    }
+  };
+  const nR = Math.round(Math.min(1, W.rain / 50) * N_RAIN), nS = Math.round(Math.min(1, W.snow / 2) * N_SNOW);
+  const hp = W.hail ? hailPhysics(W.hail) : null, nH = hp ? Math.round(N_HAIL * Math.min(1, W.rain / 25)) : 0;
+  move(rainP, nR, -7.5, 0); move(snowP, nS, -1.0, 0.4); if (hp) move(hailP, nH, -hp.v, 0);
+  // rain streak length follows the camera exposure time, as a real camera would record it
+  const texp = expParts(state.exposure).t, L = 0.02 + 7.5 * Math.min(texp, 0.03);
+  const rp = rainGeo.attributes.position.array;
+  for (let i = 0; i < nR; i++) {
+    const x = rainP[i * 3], y = rainP[i * 3 + 1], z = rainP[i * 3 + 2], k = L / 7.5;
+    rp.set([x, y, z, x - vx * k, y + 7.5 * k, z], i * 6);
+  }
+  rainGeo.attributes.position.needsUpdate = true; rainGeo.setDrawRange(0, nR * 2);
+  snowGeo.attributes.position.array.set(snowP.subarray(0, nS * 3)); snowGeo.attributes.position.needsUpdate = true; snowGeo.setDrawRange(0, nS);
+  const r = W.hail / 2000;
+  for (let i = 0; i < nH; i++) { _hm.makeScale(r, r, r).setPosition(hailP[i * 3], hailP[i * 3 + 1], hailP[i * 3 + 2]); hailMesh.setMatrixAt(i, _hm); }
+  hailMesh.count = nH; hailMesh.instanceMatrix.needsUpdate = true;
+}
+function setParticleLight(flashOn) {
+  // rain and snow are unlit points/lines: give them the radiance of a lit drop or flake (albedo / pi * illuminance)
+  const amb = (light.diffuse + 0.3 * light.direct * Math.max(0, Math.sin(sunEl * D2R))) * LUX_TO_SCENE / Math.PI;
+  const fl = flashOn ? state.led * LUX_TO_SCENE / Math.PI : 0;   // flake ~1 m from the LED
+  snowMat.color.setScalar(0.9 * (amb + fl)); rainMat.color.setScalar(0.25 * (amb + fl));
+}
+
+/* marker aging: UV fades color (exp(-years/tau)); prismatic sheeting keeps ~80% of R_A at 10 years */
+// tau: color e-folding time in years (representative). 10-year-rated prismatic sheeting keeps ~80% at 10 years
+const MATS = { prism: { tau: 45, retro: true }, vinyl: { tau: 6, retro: false }, fluor: { tau: 0.8, retro: false } };
+const colorLeft = () => Math.exp(-state.years / MATS[state.mat].tau);
+
+/* glow-in-the-dark cores: strontium aluminate afterglow decays roughly as t^-1.1 after charging.
+   ~0.3 cd/m^2 ten minutes after sunset for a high-grade pigment (representative). Pink marker glows green, yellow glows aqua. */
+const GLOW_L10 = 0.3, TMAX_GLOW = 2, XMAX_GLOW = X0 * (TMAX_GLOW / T0) * GMAX;
+function minutesSinceSunset() {
+  const decl = 23.44 * D2R * Math.sin(2 * Math.PI * (284 + state.day) / 365), phi = LAT * D2R;
+  const H0 = Math.acos(THREE.MathUtils.clamp(-Math.tan(phi) * Math.tan(decl), -1, 1)) / D2R / 15;
+  const set = 12 + H0, rise = 12 - H0;
+  if (state.time >= set) return (state.time - set) * 60;
+  if (state.time <= rise) return (state.time + 24 - set) * 60;
+  return 0;
+}
+function glowL() {
+  const m = minutesSinceSunset(); if (m <= 0) return 0;
+  const charge = THREE.MathUtils.clamp(W.cg * 1.5, 0.3, 1) * Math.pow(colorLeft(), 0.3);   // cloudy day charges less
+  return GLOW_L10 * charge * Math.pow(Math.max(m, 2) / 10, -1.1);
+}
+const glowNight = () => state.glow && light.total < 5;
+function glowExposure() { return THREE.MathUtils.clamp(0.6 / (Math.max(glowL(), 1e-6) * LUX_TO_SCENE), X0, XMAX_GLOW); }
+const raNow = () => MATS[state.mat].retro ? RA_SHEET * (1 - 0.02 * state.years) : 0.25;   // non-retro: diffuse rho/pi
+function applySurfaces() {
+  snowPlane.material.opacity = Math.min(0.95, W.snowDepth / 3);
+  M.sand.color.setScalar(1 - 0.35 * W.wet);
+  const sat = colorLeft(), cov = state.caps ? 0 : Math.min(0.6, W.snowDepth / 30);
+  for (const [mat, hex] of [[M.pink, 0xff4fa0], [M.yellow, 0xffd21a]]) {
+    const c = new THREE.Color(hex).lerp(new THREE.Color(0xe8e4e0), 1 - sat).lerp(new THREE.Color(0xffffff), cov);
+    mat.color.copy(c); mat.emissive.copy(c);
+  }
+}
+
 let follower;
 function layout() {
   const f = state.facing, z = state.mz;
@@ -483,7 +667,9 @@ function layout() {
   const edge = MOD_W / 2 + 0.025;
   follower.tilt.add(pinkPivot, yellowPivot);
   pinkPivot.position.set(0, 0, z - 0.5); yellowPivot.position.set(0, 0, z + 0.5);
-  pinkM.position.set(-f * edge, MOD_Y, 0); yellowM.position.set(f * edge, MOD_Y, 0);
+  const ms = state.msize / 10; pinkM.scale.set(1, ms, ms); yellowM.scale.set(1, ms, ms);
+  pinkM.position.set(-f * edge, MOD_Y, 0);
+  yellowM.position.set(f * edge, MOD_Y, 0);
   const cx = f * (MOD_W / 2 + 0.25), cy = PIVOT_H + CAM_ABOVE;
   post.position.set(cx, cy / 2, z); housing.position.set(cx, cy, z);
   hood.position.set(cx + f * 0.03, cy + 0.04, z);
@@ -493,7 +679,9 @@ function layout() {
   sensorCam.lookAt(sensorCam.userData.aim); sensorCam.updateMatrixWorld();
   flashLight.position.copy(sensorCam.position); flashLight.target.position.copy(sensorCam.userData.aim);
   controls.target.set(f * state.gap * 0.5, 1.7, z);
-  state.table = null; setStatus("Not taught", "idle");
+  PB.x0 = Math.min(cx, f * state.gap) - 3; PB.x1 = Math.max(cx, f * state.gap) + 3; PB.z0 = z - 10; PB.z1 = z + 10;
+  respawnAll();
+  state.table = null; state.roi = null; setStatus("Not taught", "idle");
 }
 
 /* ================= sun, daylight and twilight ================= */
@@ -529,6 +717,9 @@ function daylight(elDeg) {
 
 /* tracker with backtracking (avoids row-to-row shading) */
 function trackerAngle(s) {
+  // generic stow rules (ARRAY's own stow angles haven't been shared): hail/snow to max tilt, high wind to 30 deg or flat
+  if (W.stow !== null) return W.stow;
+  if (state.wind > 17) return state.stow30 ? 30 : 0;
   if (s.y <= 0.01) return 0;
   const tt = Math.atan2(s.x, s.y);                // true-tracking angle in the rotation plane
   const gcr = MOD_W / state.gap;
@@ -542,10 +733,18 @@ let sunDir = new THREE.Vector3(0, 1, 0), light = daylight(60), lastEnvKey = "", 
 function updateSun() {
   sunDir = sunVector(state.day, state.time);
   sunEl = Math.asin(sunDir.y) / D2R;
+  computeWeather();
   light = daylight(sunEl);
+  if (W.cg < 1 || W.cd < 1) {   // overcast: direct beam cut, diffuse becomes a fraction of clear-sky global
+    const glob = light.total;
+    light = { direct: light.direct * W.cd, diffuse: Math.max(light.diffuse * Math.min(1, W.cg * 2), glob * W.cg) };
+    light.total = light.direct * Math.max(0, Math.sin(sunEl * D2R)) + light.diffuse;
+  }
+  const over = 1 - W.cg;
   for (const s of [sky, envSky]) {
     s.material.uniforms.sunPosition.value.copy(sunDir);
-    s.material.uniforms.skyScale.value = Math.min(1, light.total / 3000);
+    s.material.uniforms.skyScale.value = Math.min(1, light.total / 3000) * (1 - 0.75 * over);
+    s.material.uniforms.turbidity.value = 3 + 17 * over; s.material.uniforms.rayleigh.value = 1.7 - 1.4 * over;
   }
   sun.position.copy(sunDir).multiplyScalar(110).add(new THREE.Vector3(3, 0, state.mz));
   sun.target.position.set(3, 0, state.mz);
@@ -553,8 +752,12 @@ function updateSun() {
   const warm = THREE.MathUtils.clamp(1 - sunEl / 25, 0, 1);
   sun.color.setRGB(1, 1 - 0.25 * warm, 1 - 0.55 * warm);
   hemi.intensity = light.diffuse * LUX_TO_SCENE;
-  const fogDay = THREE.MathUtils.clamp(light.total / 20000, 0.003, 1);
-  scene.fog.color.setRGB(0.78 * fogDay, 0.84 * fogDay, 0.9 * fogDay);
+  // airlight: Koschmieder extinction sigma = 3.912 / visibility, matched at the marker distance
+  const sig = 3.912 / W.vis;
+  scene.fog.density = Math.max(0.00045, Math.sqrt(sig / state.gap));
+  const air = light.diffuse * LUX_TO_SCENE / Math.PI * 0.9;
+  scene.fog.color.setRGB(W.tint[0] * air, W.tint[1] * air, W.tint[2] * air);
+  applySurfaces(); setParticleLight(false);
   // the 3D view adapts like an eye so you can still see the scene; the sensor has its own exposure
   renderer.toneMappingExposure = 0.55 * THREE.MathUtils.clamp(Math.pow(60000 / Math.max(light.total, 1e-4), 0.75), 1, 300);
   const key = state.day + ":" + state.time.toFixed(2);
@@ -575,6 +778,12 @@ const tw = { drive: { phi: 0, dphi: 0, stat: 0 }, foll: { phi: 0, dphi: 0, stat:
 let driveAngle = 0, followerBase = 0, followerAtMarker = 0, torquePerM = 0, postLean = 0;
 
 const cm = (tiltDeg) => CM_PEAK * Math.sin(2 * tiltDeg * D2R);   // representative hinge-moment curve
+// torsional galloping: quasi-steady aerodynamic damping zeta_a = -(rho B^3 / (8 I w^2)) * U * a(tilt), strongest near flat
+const AERO_K = RHO_AIR * MOD_W ** 3 / (8 * I_ROT * OMEGA_T * OMEGA_T);
+const GALLOP_A = 1.54;   // ASSUMED: puts the onset near 18 m/s at flat stow with 3% damping
+const aeroZeta = (u, tiltDeg) => -AERO_K * u * GALLOP_A * Math.exp(-((tiltDeg / 12) ** 2));
+const K_LINK = 1.5e6;    // ASSUMED drive-linkage torsional stiffness, N m/rad
+let zetaNow = ZETA_T, linkBacklash = 0, linkFlex = 0, rowOverride;
 function stepPhysics(dt) {
   // gusts: first-order (Ornstein-Uhlenbeck) process with the Taylor time scale L/U
   const U = state.wind, sig = TURB_I * U, T = TURB_L / Math.max(U, 0.5);
@@ -592,17 +801,26 @@ function stepPhysics(dt) {
       const m = q * cm(ang) * MOD_W * MOD_W;        // N m per m of row
       if (key === "foll") torquePerM = m;
       o.stat = m * HALF * HALF / (2 * GJ);           // static tip twist for uniform torque
-      const acc = OMEGA_T * OMEGA_T * (o.stat - o.phi) - 2 * ZETA_T * OMEGA_T * o.dphi;
+      const z = (state.dampers ? 0.10 : ZETA_T) + aeroZeta(u, ang);
+      if (key === "foll") zetaNow = z;
+      // amplitude-limiting nonlinear damping so an unstable row settles into a finite limit cycle
+      const acc = OMEGA_T * OMEGA_T * (o.stat - o.phi) - 2 * z * OMEGA_T * o.dphi - 0.6 * o.dphi * Math.abs(o.dphi);
       o.dphi += acc * s; o.phi += o.dphi * s;       // semi-implicit Euler, stable at this step size
     }
     // camera post: quasi-static cantilever (its natural frequency is ~13 Hz, far above gusts)
     const w = q * CD_POST * POST_D, Lp = PIVOT_H + CAM_ABOVE;
     postLean = w * Lp ** 3 / (6 * POST_EI);          // rad, tip rotation under uniform load
+    // drive linkage: backlash deadband flips side when the wind torque reverses; flex = total torque / stiffness
+    const Ttot = torquePerM * ROW_LEN;
+    if (Math.abs(Ttot) > 50) linkBacklash = Math.sign(Ttot) * state.backlash / 2;
+    linkFlex = Ttot / K_LINK / D2R;
   }
+  stepWeather(dt);
 }
 function setRowAngles(followerOverride) {
   driveAngle = trackerAngle(sunDir);
-  followerBase = THREE.MathUtils.clamp(followerOverride ?? (driveAngle + state.drift), -MAX_TILT - 5, MAX_TILT + 5);
+  rowOverride = followerOverride;
+  followerBase = THREE.MathUtils.clamp(followerOverride ?? (driveAngle + state.drift), -MAX_TILT - 5, MAX_TILT + 5) + linkBacklash + linkFlex;
   const dTip = tw.drive.phi / D2R, fTip = tw.foll.phi / D2R;
   rows.forEach(r => { r.tilt.rotation.z = -driveAngle * D2R; if (r !== follower) setTwist(r, dTip); });
   follower.tilt.rotation.z = -followerBase * D2R;
@@ -620,8 +838,10 @@ function aimCamera() {
 }
 
 /* ================= sensor pipeline ================= */
-const hdrRT = new THREE.WebGLRenderTarget(SENSOR_W, SENSOR_H, { type: THREE.HalfFloatType, samples: 4 });
-const ldrRT = new THREE.WebGLRenderTarget(SENSOR_W, SENSOR_H);
+// 32-bit float: night radiance (~1e-6 in scene units) is below half-float's smallest normal value and would flush to zero
+const hdrRT = new THREE.WebGLRenderTarget(SENSOR_W, SENSOR_H, { type: THREE.FloatType, samples: 4 });
+// float readback so sub-DN signals survive until noise is added (a real sensor adds noise before its ADC)
+const ldrRT = new THREE.WebGLRenderTarget(SENSOR_W, SENSOR_H, { type: THREE.FloatType });
 const quadCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 const quadMat = new THREE.ShaderMaterial({
   uniforms: { tHdr: { value: hdrRT.texture }, exposure: { value: 1 } },
@@ -639,31 +859,77 @@ const quadMat = new THREE.ShaderMaterial({
   depthTest: false, depthWrite: false,
 });
 const quadScene = new THREE.Scene(); quadScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), quadMat));
-const rawBuf = new Uint8Array(SENSOR_W * SENSOR_H * 4);
+const rawBuf = new Float32Array(SENSOR_W * SENSOR_H * 4);
 const N = SENSOR_W * SENSOR_H;
 
-function captureRGB(flashOn, X) {
-  // retroreflected luminance L = R_A * E, with E = I_led / d^2 at the marker
-  const d = sensorCam.position.distanceTo(sensorCam.userData.aim);
-  const Lretro = RA_SHEET * state.led / (d * d);              // cd/m^2
-  M.pink.emissiveIntensity = M.yellow.emissiveIntensity = flashOn ? Lretro * LUX_TO_SCENE : 0;
-  flashLight.intensity = flashOn ? state.led * LUX_TO_SCENE : 0;
+let truthAcc = 0, truthN = 0, blurPx = 0;
+function renderOnce(X) {
   renderer.setRenderTarget(hdrRT); renderer.render(scene, sensorCam);
   quadMat.uniforms.exposure.value = X;
   renderer.setRenderTarget(ldrRT); renderer.render(quadScene, quadCam);
   renderer.readRenderTargetPixels(ldrRT, 0, 0, SENSOR_W, SENSOR_H, rawBuf);
   renderer.setRenderTarget(null);
-  M.pink.emissiveIntensity = M.yellow.emissiveIntensity = 0; flashLight.intensity = 0;
+}
+const FPX = (SENSOR_W / 2) / Math.tan(HFOV / 2 * D2R);   // focal length in pixels
+function captureRGB(flashOn, X, opts = {}) {
+  // retroreflected luminance L = R_A * E, with E = I_led / d^2 at the marker
+  const d = sensorCam.position.distanceTo(sensorCam.userData.aim);
+  const Lretro = raNow() * state.led / (d * d);              // cd/m^2
+  M.pink.emissiveIntensity = M.yellow.emissiveIntensity = flashOn ? Lretro * LUX_TO_SCENE : 0;
+  flashLight.intensity = flashOn ? state.led * LUX_TO_SCENE : 0;
+  setParticleLight(flashOn);
+  if (opts.glow) {
+    const Lg = glowL() * LUX_TO_SCENE;
+    M.pink.emissive.setHex(0x3dff7a); M.yellow.emissive.setHex(0x2ec8ff);
+    M.pink.emissiveIntensity = M.yellow.emissiveIntensity = Lg;
+  }
+  // motion blur: a long exposure integrates the moving row; a 2 ms flash pulse freezes it
+  const t = opts.t ?? (flashOn && state.pulse ? 0.002 : expParts(X, opts.tmax).t);
+  const subs = t > 1 / 250 ? Math.min(opts.glow ? 2 : 4, Math.ceil(t * 90)) : 1;
+  const acc = subs > 1 ? new Float32Array(N * 3) : null;
   const img = new Float32Array(N * 3);
-  for (let y = 0; y < SENSOR_H; y++) {
-    const src = (SENSOR_H - 1 - y) * SENSOR_W * 4, dst = y * SENSOR_W * 3;
-    for (let x = 0; x < SENSOR_W; x++) {
-      img[dst + x * 3] = rawBuf[src + x * 4]; img[dst + x * 3 + 1] = rawBuf[src + x * 4 + 1]; img[dst + x * 3 + 2] = rawBuf[src + x * 4 + 2];
+  const a0 = followerAtMarker;
+  for (let sIdx = 0; sIdx < subs; sIdx++) {
+    if (sIdx) { stepPhysics(t / subs); setRowAngles(rowOverride); aimCamera(); }
+    truthAcc += followerAtMarker; truthN++;
+    renderOnce(X);
+    for (let y = 0; y < SENSOR_H; y++) {
+      const src = (SENSOR_H - 1 - y) * SENSOR_W * 4, dst = y * SENSOR_W * 3;
+      for (let x = 0; x < SENSOR_W; x++) {
+        const k = dst + x * 3, q = src + x * 4;
+        const r = rawBuf[q] * 255, g = rawBuf[q + 1] * 255, b = rawBuf[q + 2] * 255;
+        if (acc) { acc[k] += r; acc[k + 1] += g; acc[k + 2] += b; }
+        else { img[k] = r; img[k + 1] = g; img[k + 2] = b; }
+      }
     }
   }
-  return img;
+  if (acc) for (let i = 0; i < N * 3; i++) img[i] = acc[i] / subs;
+  blurPx = Math.abs(followerAtMarker - a0) * D2R * (MOD_W / 2) / state.gap / radPerPx;
+  M.pink.emissiveIntensity = M.yellow.emissiveIntensity = 0; flashLight.intensity = 0;
+  if (opts.glow) applySurfaces();   // restore the daytime emissive colors
+  setParticleLight(false);
+  return distort(img);
 }
-const expParts = (X) => { const t = Math.min(TMAX, T0 * X / X0); return { t, g: Math.max(1, X / (X0 * t / T0)) }; };
+function distort(img) {
+  // real lens: barrel distortion x_d = x_u (1 + k1 r_u^2); sample the ideal image at the undistorted spot
+  const k1 = state.kdist; if (!k1) return img;
+  const out = new Float32Array(N * 3), cx = SENSOR_W / 2, cy = SENSOR_H / 2;
+  for (let y = 0; y < SENSOR_H; y++) for (let x = 0; x < SENSOR_W; x++) {
+    const xd = (x - cx) / FPX, yd = (y - cy) / FPX;
+    let xu = xd, yu = yd;
+    for (let it = 0; it < 3; it++) { const f = 1 + k1 * (xu * xu + yu * yu); xu = xd / f; yu = yd / f; }
+    const sx = Math.round(xu * FPX + cx), sy = Math.round(yu * FPX + cy), o = (y * SENSOR_W + x) * 3;
+    if (sx < 0 || sy < 0 || sx >= SENSOR_W || sy >= SENSOR_H) continue;
+    const i = (sy * SENSOR_W + sx) * 3; out[o] = img[i]; out[o + 1] = img[i + 1]; out[o + 2] = img[i + 2];
+  }
+  return out;
+}
+function undistortPt(x, y) {
+  const k1 = state.kdist, cx = SENSOR_W / 2, cy = SENSOR_H / 2, xd = (x - cx) / FPX, yd = (y - cy) / FPX;
+  const f = 1 + k1 * (xd * xd + yd * yd);   // inverse: x_u = x_d / (1 + k1 r_d^2), close enough for small k1
+  return [xd / f * FPX + cx, yd / f * FPX + cy];
+}
+const expParts = (X, tmax = TMAX) => { const t = Math.min(tmax, T0 * X / X0); return { t, g: Math.max(1, X / (X0 * t / T0)) }; };
 
 let dustMap = null, dustLevel = -1;
 function buildDust() {
@@ -676,11 +942,48 @@ function buildDust() {
     for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) dustMap[y * SENSOR_W + x] += a * Math.exp(-((x - cx) ** 2 + (y - cy) ** 2) / (rad * rad));
   }
 }
+function sensorTemp() {
+  // small grey enclosure in the sun: +15 C at full sun (a hood shades it a little), +4 C from the electronics
+  const sunW = light.direct * Math.max(0, Math.sin(sunEl * D2R)) / 105;
+  return state.temp + 15 * Math.min(1.2, sunW / 1000) * (state.hood ? 0.85 : 1) + 4;
+}
+function lensWeather(img) {
+  // drops and flakes on the window act as tiny lenses: they flip and blur the scene behind them
+  const shield = state.hood ? 0.25 : 1;
+  const windF = 1 + Math.max(0, state.wind) / 10;
+  const nDrops = Math.round(Math.min(90, W.rain * 1.2 * windF * shield) * (0.6 + 0.8 * Math.random()));
+  const nFlakes = Math.round(Math.min(70, W.snow * 15 * windF * shield) * (0.6 + 0.8 * Math.random()));
+  const nHail = W.hail ? Math.round(Math.min(6, W.rain / 8) * shield * Math.random() * 2) : 0;
+  if (!nDrops && !nFlakes && !nHail) return;
+  const src = img.slice();
+  const blob = (cx, cy, r, fn) => {
+    for (let y = Math.max(0, cy - r | 0); y < Math.min(SENSOR_H, cy + r); y++) for (let x = Math.max(0, cx - r | 0); x < Math.min(SENSOR_W, cx + r); x++) {
+      const d2 = ((x - cx) ** 2 + (y - cy) ** 2) / (r * r); if (d2 > 1) continue; fn(x, y, d2);
+    }
+  };
+  for (let i = 0; i < nDrops; i++) {
+    const cx = Math.random() * SENSOR_W, cy = Math.random() * SENSOR_H, r = (8 + Math.random() * 28) * (state.hood ? 0.6 : 1);
+    blob(cx, cy, r, (x, y) => {
+      const sx = Math.round(cx - (x - cx) * 0.6), sy = Math.round(cy - (y - cy) * 0.6);
+      if (sx < 1 || sy < 1 || sx >= SENSOR_W - 1 || sy >= SENSOR_H - 1) return;
+      const o = (y * SENSOR_W + x) * 3;
+      for (let c = 0; c < 3; c++) {
+        let v = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) v += src[((sy + dy) * SENSOR_W + sx + dx) * 3 + c];
+        img[o + c] = v / 9 * 1.05;
+      }
+    });
+  }
+  let mean = 0; for (let i = 0; i < N; i += 97) mean += src[i * 3 + 1]; mean /= N / 97;
+  const flake = (r, a) => (x, y, d2) => { const o = (y * SENSOR_W + x) * 3, w = a * (1 - d2); for (let c = 0; c < 3; c++) img[o + c] = img[o + c] * (1 - w) + Math.min(255, mean * 1.6 + 40) * w; };
+  for (let i = 0; i < nFlakes; i++) { const r = 6 + Math.random() * 20; blob(Math.random() * SENSOR_W, Math.random() * SENSOR_H, r, flake(r, 0.8)); }
+  for (let i = 0; i < nHail; i++) { const r = 30 + Math.random() * 40; blob(Math.random() * SENSOR_W, Math.random() * SENSOR_H, r, flake(r, 0.95)); }
+}
 function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 
-function sensorEffects(img, X, autoExposure) {
+function sensorEffects(img, X, autoExposure, tmax) {
   if (dustLevel !== state.dust) buildDust();
-  const { g } = expParts(X);
+  lensWeather(img);
+  const { g, t } = expParts(X, tmax);
   const fwd = new THREE.Vector3(); sensorCam.getWorldDirection(fwd);
   const sunAng = Math.acos(THREE.MathUtils.clamp(fwd.dot(sunDir), -1, 1)) / D2R;
   let glare = 0, sx = -1, sy = -1;
@@ -689,19 +992,22 @@ function sensorEffects(img, X, autoExposure) {
     const p = sunDir.clone().multiplyScalar(1000).add(sensorCam.position).project(sensorCam);
     sx = (p.x * 0.5 + 0.5) * SENSOR_W; sy = (1 - (p.y * 0.5 + 0.5)) * SENSOR_H;
   }
-  const haze = state.dust / 100 * 0.35;
+  const haze = Math.min(0.9, (state.dust / 100 + W.lensDust) * 0.35);
   let sum = 0;
   for (let i = 0; i < N; i++) sum += img[i * 3] * 0.3 + img[i * 3 + 1] * 0.59 + img[i * 3 + 2] * 0.11;
   const mean = sum / N, veil = mean * (0.6 + 1.6 * glare);
-  const readNoise = state.noise * g;
+  // photon-transfer noise model in electrons: full well ~6000 e-, so 255 DN = 6000 e- at gain 1
+  const CG = 0.0425 * g;                                                   // DN per electron at this gain
+  const darkE = DARK_E25 * Math.pow(2, (sensorTemp() - 25) / 6.5) * t;     // dark electrons (doubles every 6.5 C)
+  const fixedVar = (state.noise * CG) ** 2 + darkE * CG * CG;              // read + dark shot noise, DN^2
   for (let y = 0; y < SENSOR_H; y++) for (let x = 0; x < SENSOR_W; x++) {
     const i = y * SENSOR_W + x, k = i * 3;
     const flare = glare > 0 ? glare * (420 * Math.exp(-Math.hypot(x - sx, y - sy) / SENSOR_W * 5) + 90) : 0;
     const dm = dustMap[i], hz = Math.min(0.9, haze + dm * 0.5 + glare * 0.25);
     for (let c = 0; c < 3; c++) {
       let v = img[k + c] * (1 - hz) + veil * hz * (1 + dm) + flare;
-      v += gauss() * (readNoise + 0.12 * Math.sqrt(Math.max(v, 0) * g));
-      img[k + c] = v < 0 ? 0 : v > 255 ? 255 : v;
+      v += gauss() * Math.sqrt(fixedVar + Math.max(v, 0) * CG);          // + photon shot noise
+      img[k + c] = v < 0 ? 0 : v > 255 ? 255 : Math.round(v);   // 8-bit ADC after the noise
     }
   }
   if (autoExposure) {
@@ -711,25 +1017,40 @@ function sensorEffects(img, X, autoExposure) {
   return { glare };
 }
 
-function findMarkers(img) {
+function findMarkers(img, glow) {
   const ys = new Float32Array(N), ps = new Float32Array(N);
   let yMax = 0, pMax = 0;
   for (let i = 0; i < N; i++) {
     const r = img[i * 3], g = img[i * 3 + 1], b = img[i * 3 + 2];
-    const y = Math.min(r, g) - b, p = Math.min(r, b) - g;
+    // daytime: yellow = min(R,G) - B, pink = min(R,B) - G. Glow at night: aqua = B - R, green = G - max(R,B)
+    const y = glow ? b - r : Math.min(r, g) - b, p = glow ? g - Math.max(r, b) : Math.min(r, b) - g;
     ys[i] = y; ps[i] = p; if (y > yMax) yMax = y; if (p > pMax) pMax = p;
   }
-  const blob = (sc, mx) => {
-    const t = Math.max(state.tol, mx * 0.45); let w = 0, sx = 0, sy = 0, sxx = 0, syy = 0, n = 0;
-    for (let i = 0; i < N; i++) if (sc[i] > t) {
-      const v = sc[i] - t, x = i % SENSOR_W, y = (i / SENSOR_W) | 0;
+  // noise-adaptive threshold: mean + 4-5 sigma of each color score over the image, never below the minimum set by the user.
+  // A fixed threshold loses faded (UV-aged) markers; this one follows the image's own noise and contrast.
+  // region of interest learned during teach: only search where each marker has been seen, so sky and far rows can't interfere
+  const full = { x0: 0, x1: SENSOR_W, y0: 0, y1: SENSOR_H };
+  const adapt = (sc, r) => {
+    let s1 = 0, s2 = 0, n = 0;
+    for (let y = r.y0; y < r.y1; y += 2) for (let x = r.x0; x < r.x1; x += 3) { const v = sc[y * SENSOR_W + x]; s1 += v; s2 += v * v; n++; }
+    const mu = s1 / n, nt = mu + (glow ? 4 : 5) * Math.sqrt(Math.max(0, s2 / n - mu * mu));
+    return glow ? Math.max(state.tol, nt) : THREE.MathUtils.clamp(nt, state.tol, 38);
+  };
+  const blob = (sc, _mx, roi) => {
+    const r = roi || full;
+    let mx = 0; for (let y = r.y0; y < r.y1; y++) for (let x = r.x0; x < r.x1; x++) if (sc[y * SENSOR_W + x] > mx) mx = sc[y * SENSOR_W + x];
+    const t = Math.max(adapt(sc, r), mx * 0.45); let w = 0, sx = 0, sy = 0, sxx = 0, syy = 0, n = 0;
+    for (let y = r.y0; y < r.y1; y++) for (let x = r.x0; x < r.x1; x++) {
+      const i = y * SENSOR_W + x; if (sc[i] <= t) continue;
+      const v = sc[i] - t;
       w += v; sx += v * x; sy += v * y; sxx += v * x * x; syy += v * y * y; n++;
     }
-    if (n < 6) return { n, t };
+    if (n < 6) return { n, t, why: mx < state.tol ? "too faint" : "too small" };
     const cx = sx / w, cy = sy / w, spread = Math.sqrt(Math.max(0, sxx / w - cx * cx) + Math.max(0, syy / w - cy * cy));
-    return spread < 25 ? { x: cx, y: cy, n, t } : { n: 0, t };
+    return spread < 25 ? { x: cx, y: cy, n, t } : { n: 0, t, why: "scattered clutter" };
   };
-  return { yellow: blob(ys, yMax), pink: blob(ps, pMax), ys, ps };
+  const roi = state.roi;
+  return { yellow: blob(ys, yMax, roi && roi.yellow), pink: blob(ps, pMax, roi && roi.pink), ys, ps };
 }
 
 // heat shimmer: angle-of-arrival jitter sigma = sqrt(2.91 Cn^2 L D^-1/3), Cn^2 rises over sun-heated ground
@@ -739,11 +1060,39 @@ function shimmerSigmaPx() {
   return Math.sqrt(2.91 * cn2 * state.gap * Math.pow(LENS_AP, -1 / 3)) / radPerPx;
 }
 
-function measureOnce({ draw = false } = {}) {
+function boxBlur(img, r) {
+  const out = new Float32Array(N * 3), tmp = new Float32Array(N * 3), w = 2 * r + 1;
+  for (let y = 0; y < SENSOR_H; y++) for (let x = 0; x < SENSOR_W; x++) for (let c = 0; c < 3; c++) {
+    let v = 0; for (let d = -r; d <= r; d++) v += img[(y * SENSOR_W + Math.min(SENSOR_W - 1, Math.max(0, x + d))) * 3 + c]; tmp[(y * SENSOR_W + x) * 3 + c] = v / w;
+  }
+  for (let y = 0; y < SENSOR_H; y++) for (let x = 0; x < SENSOR_W; x++) for (let c = 0; c < 3; c++) {
+    let v = 0; for (let d = -r; d <= r; d++) v += tmp[(Math.min(SENSOR_H - 1, Math.max(0, y + d)) * SENSOR_W + x) * 3 + c]; out[(y * SENSOR_W + x) * 3 + c] = v / w;
+  }
+  return out;
+}
+function measureFrame({ draw = false } = {}) {
+  truthAcc = 0; truthN = 0;
   let img, fx;
-  if (state.flash && light.total < 50) {
+  let glowMode = false;
+  if (glowNight()) {
+    glowMode = true;
+    const X = glowExposure();
+    // stack several 2 s exposures (rows sit still in night stow), then average 5x5 neighbourhoods: noise drops ~sqrt(n * 25)
+    const nStack = 10;
+    img = new Float32Array(N * 3);
+    for (let k = 0; k < nStack; k++) {
+      if (k) stepPhysics(0.2);
+      const f1 = captureRGB(false, X, { glow: true, tmax: TMAX_GLOW });
+      fx = sensorEffects(f1, X, false, TMAX_GLOW);
+      for (let i = 0; i < N * 3; i++) img[i] += f1[i] / nStack;
+    }
+    if (draw) drawFeed(img);
+    img = boxBlur(img, 2);
+  } else if (state.flash && light.total < 50) {
     const FX = flashExposure();
-    const lit = captureRGB(true, FX), dark = captureRGB(false, FX);
+    // the dark reference frame uses the same short timing right after the lit one, and the angle is the lit frame's
+    const lit = captureRGB(true, FX); const tA = truthAcc, tN = truthN;
+    const dark = captureRGB(false, FX, { t: state.pulse ? 0.002 : undefined }); truthAcc = tA; truthN = tN;
     fx = sensorEffects(lit, FX, false); sensorEffects(dark, FX, false);
     img = new Float32Array(N * 3);
     for (let i = 0; i < N * 3; i++) img[i] = Math.max(0, lit[i] - dark[i]);
@@ -753,13 +1102,32 @@ function measureOnce({ draw = false } = {}) {
     fx = sensorEffects(img, state.exposure, true);
     if (draw) drawFeed(img);
   }
-  const mk = findMarkers(img);
+  const mk = findMarkers(img, glowMode);
+  for (const b of [mk.yellow, mk.pink]) if (b.x !== undefined) { b.rx = b.x; b.ry = b.y; }   // raw image position, for the ROI
+  if (state.undistort) for (const b of [mk.yellow, mk.pink]) if (b.x !== undefined) [b.x, b.y] = undistortPt(b.x, b.y);
   const sj = shimmerSigmaPx();
   if (mk.yellow.y !== undefined) mk.yellow.y += gauss() * sj;
   if (mk.pink.y !== undefined) mk.pink.y += gauss() * sj;
   if (draw) drawMask(mk);
-  const found = mk.yellow.x !== undefined && mk.pink.x !== undefined;
-  return { found, feature: found ? mk.yellow.y - mk.pink.y : NaN, pinkY: mk.pink.y ?? NaN, mk, fx };
+  const both = mk.yellow.x !== undefined && mk.pink.x !== undefined;
+  const found = state.pinkfb ? mk.pink.x !== undefined : both;
+  return { found, both, feature: both ? mk.yellow.y - mk.pink.y : NaN, pinkY: mk.pink.y ?? NaN, mk, fx, glowMode, truth: truthN ? truthAcc / truthN : followerAtMarker };
+}
+function measureOnce({ draw = false } = {}) {
+  if (!state.median || glowNight()) return measureFrame({ draw });   // the glow stack already rejects transients
+  // adaptive: in rain, hail or snow, drops and flakes cross the markers in most frames, so take a longer median
+  const nF = W.rain || W.snow || W.hail ? 7 : 3;
+  const fr = [];
+  for (let k = 0; k < nF; k++) { if (k) stepPhysics(0.06); fr.push(measureFrame({ draw: draw && k === nF - 1 })); }
+  const ok = fr.filter(f => f.found);
+  if (ok.length < 2) return ok.length ? ok[0] : fr[fr.length - 1];
+  const med = (a) => { const s = [...a].sort((x, y) => x - y); return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2; };
+  const last = ok[ok.length - 1];
+  // keep the median frame itself, so the reading and the true angle come from the same instant
+  const byP = [...ok].sort((x, y) => x.pinkY - y.pinkY), mid = byP[(byP.length - 1) >> 1];
+  if (mid.both) return mid;
+  const withBoth = ok.filter(f => f.both);
+  return withBoth.length > ok.length / 2 ? withBoth.sort((x, y) => x.pinkY - y.pinkY)[(withBoth.length - 1) >> 1] : mid;
 }
 
 const feedCtx = $("feed").getContext("2d"), maskCtx = $("mask").getContext("2d");
@@ -799,6 +1167,7 @@ function estimate(m) {
     return { angle: end.a, outside: true, via: "pink" };
   }
   const c = coarse[0];
+  if (!m.both) return { angle: c, outside: false, via: "pink" };
   const fine = interpAll(t, "f", m.feature).sort((x, y) => Math.abs(x - c) - Math.abs(y - c));
   if (fine.length && Math.abs(fine[0] - c) < 1.5) return { angle: fine[0], outside: false, via: "gap" };
   return { angle: c, outside: false, via: "pink" };
@@ -809,17 +1178,19 @@ function warmExposure() { for (let i = 0; i < 4; i++) measureOnce(); }
 
 async function teach() {
   if (state.busy) return; state.busy = true; toggleButtons(true);
-  const pts = []; warmExposure();
+  state.roi = null;
+  const pts = [], seen = { pink: [], yellow: [] }; warmExposure();
   for (let a = -MAX_TILT, i = 0; a <= MAX_TILT + 1e-6; a += 2, i++) {
     const reads = [];
     for (let k = 0; k < 3; k++) {
       stepPhysics(0.2 + Math.random() * 0.4); setRowAngles(a); aimCamera();
-      const m = measureOnce({ draw: k === 2 });
-      if (m.found) reads.push({ m, truth: followerAtMarker });   // reference inclinometer reads the angle at the markers
+      const m = measureFrame({ draw: k === 2 });
+      if (m.found) reads.push({ m, truth: m.truth });   // reference inclinometer reads the angle at the markers
+      for (const k2 of ["pink", "yellow"]) if (m.mk[k2].rx !== undefined) seen[k2].push([m.mk[k2].rx, m.mk[k2].ry]);
     }
     if (reads.length) pts.push({
       a: reads.reduce((s, r) => s + r.truth, 0) / reads.length,
-      f: reads.reduce((s, r) => s + r.m.feature, 0) / reads.length,
+      f: reads.some(r => r.m.both) ? reads.filter(r => r.m.both).reduce((s, r) => s + r.m.feature, 0) / reads.filter(r => r.m.both).length : NaN,
       p: reads.reduce((s, r) => s + r.m.pinkY, 0) / reads.length,
     });
     $("progress").style.width = ((a + MAX_TILT) / (2 * MAX_TILT) * 100) + "%";
@@ -833,9 +1204,17 @@ async function teach() {
   }
   pts.sort((p, q) => p.a - q.a);
   state.table = pts;
-  let folds = 0; for (let i = 2; i < pts.length; i++) if (Math.sign(pts[i].f - pts[i - 1].f) !== Math.sign(pts[i - 1].f - pts[i - 2].f)) folds++;
+  // ROI: the box each marker swept during teach, padded by 3x the marker's size in pixels
+  const pad = Math.round(3 * state.msize / 100 / (state.gap * radPerPx));
+  const box = (l) => l.length ? { x0: Math.max(0, Math.floor(Math.min(...l.map(q => q[0])) - pad)), x1: Math.min(SENSOR_W, Math.ceil(Math.max(...l.map(q => q[0])) + pad)),
+                                   y0: Math.max(0, Math.floor(Math.min(...l.map(q => q[1])) - pad)), y1: Math.min(SENSOR_H, Math.ceil(Math.max(...l.map(q => q[1])) + pad)) } : null;
+  state.roi = { pink: box(seen.pink), yellow: box(seen.yellow) };
+  const blocked = pts.filter(q => isNaN(q.f)).map(q => q.a);
+  const fp = pts.filter(q => !isNaN(q.f));
+  let folds = 0; for (let i = 2; i < fp.length; i++) if (Math.sign(fp[i].f - fp[i - 1].f) !== Math.sign(fp[i - 1].f - fp[i - 2].f)) folds++;
   $("result").innerHTML = `<strong>Taught ${pts.length} of 61 angles</strong> at ${fmtTime(state.time)}, wind ${state.wind.toFixed(1)} m/s.\n` +
     (pts.length < 55 ? "Some angles had no markers in view.\n" : "") +
+    (blocked.length ? `Torque tube blocks the far marker from ${sign(Math.min(...blocked), 0)} to ${sign(Math.max(...blocked), 0)}. The near marker covers those angles.\n` : "") +
     (folds ? `The gap folds back ${folds}× near edge-on, where the module hides part of the far marker. The near pink marker picks the right branch there.` : "The gap is one-to-one across the sweep.");
   $("progress").style.width = "0%"; state.busy = false; toggleButtons(false);
 }
@@ -849,7 +1228,7 @@ async function runTest() {
     maxTwist = Math.max(maxTwist, Math.abs(followerAtMarker - followerBase));
     const m = measureOnce({ draw: i % 5 === 0 });
     const e = estimate(m);
-    if (!e) missed++; else errs.push(Math.abs(e.angle - followerAtMarker));
+    if (!e) missed++; else errs.push(Math.abs(e.angle - m.truth));
     $("progress").style.width = ((i + 1) / 40 * 100) + "%";
     if (i % 2 === 0) await frame();
   }
@@ -864,7 +1243,38 @@ async function runTest() {
     `Largest twist   ${maxTwist.toFixed(2)}° at the markers` + (missed ? "\nMissed readings would hold the last good value in the field." : "");
   $("progress").style.width = "0%"; state.busy = false; toggleButtons(false);
 }
-function toggleButtons(b) { $("teach").disabled = $("test").disabled = b; }
+function toggleButtons(b) { $("teach").disabled = $("test").disabled = $("diag").disabled = b; }
+
+// sweep every degree in the current conditions and log where and why a marker is lost
+window.simLog = [];
+async function findLosses() {
+  if (state.busy) return; state.busy = true; toggleButtons(true);
+  const lost = []; warmExposure();
+  for (let a = -60, i = 0; a <= 60; a += 1, i++) {
+    stepPhysics(0.2 + Math.random() * 0.3); setRowAngles(a); aimCamera();
+    const m = measureOnce({ draw: i % 6 === 0 });
+    if (!m.both) {
+      const why = [];
+      if (m.mk.pink.x === undefined) why.push("pink " + (m.mk.pink.why || "lost"));
+      if (m.mk.yellow.x === undefined) why.push("yellow " + (m.mk.yellow.why || "lost"));
+      lost.push({ a, why: why.join(", ") + (m.found ? " (near-marker fallback reads it)" : " (no reading)") });
+    }
+    $("progress").style.width = ((a + 60) / 120 * 100) + "%";
+    if (i % 3 === 0) await frame();
+  }
+  // group consecutive angles with the same reason
+  const groups = [];
+  for (const l of lost) { const g = groups[groups.length - 1]; if (g && g.why === l.why && l.a === g.to + 1) g.to = l.a; else groups.push({ from: l.a, to: l.a, why: l.why }); }
+  const cond = `${PRESETS[state.weather].name}, ${fmtDay(state.day)} ${fmtTime(state.time)}, wind ${state.wind.toFixed(0)} m/s, markers ${state.mz} m out`;
+  window.simLog.push({ cond, lost: lost.length, groups });
+  $("result").innerHTML = `<strong>Marker losses, −60° to +60° in 1° steps</strong>
+${cond}
+` +
+    (groups.length ? `A marker was missing at ${lost.length}/121 angles, no reading at ${lost.filter(l => l.why.endsWith("(no reading)")).length}:
+` + groups.map(g => `  ${g.from === g.to ? sign(g.from, 0) : sign(g.from, 0) + " to " + sign(g.to, 0)}  ${g.why}`).join("\n") : "No losses. Both markers were found at every angle.");
+  $("progress").style.width = "0%"; state.busy = false; toggleButtons(false);
+}
+$("diag").addEventListener("click", findLosses);
 
 /* ================= UI ================= */
 const fmtTime = (h) => { const hh = Math.floor(h), mm = Math.round((h - hh) * 60); return `${String(hh + (mm === 60 ? 1 : 0)).padStart(2, "0")}:${String(mm % 60).padStart(2, "0")}`; };
@@ -877,13 +1287,29 @@ function syncOutputs() {
   $("o-gap").textContent = state.gap.toFixed(1) + " m"; $("o-drift").textContent = sign(state.drift);
   $("o-mz").textContent = state.mz.toFixed(1) + " m";
   $("o-wind").textContent = state.wind.toFixed(1) + " m/s"; $("o-wdir").textContent = state.wdir + "°";
-  $("o-dust").textContent = state.dust + "%"; $("o-led").textContent = state.led + " cd"; $("o-noise").textContent = state.noise.toFixed(1) + " DN"; $("o-tol").textContent = state.tol;
+  $("o-msize").textContent = state.msize + " cm";
+  $("o-wint").textContent = Math.round(state.wint * 100) + "%"; $("o-temp").textContent = state.temp + " °C";
+  $("o-years").textContent = state.years.toFixed(1) + " yr"; $("o-backlash").textContent = state.backlash.toFixed(2) + "°";
+  $("o-kdist").textContent = state.kdist.toFixed(2); $("o-weather").textContent = PRESETS[state.weather].name;
+  $("o-dust").textContent = state.dust + "%"; $("o-led").textContent = state.led + " cd"; $("o-noise").textContent = state.noise.toFixed(1) + " e⁻"; $("o-tol").textContent = state.tol;
 }
 function setStatus(text, kind) { const s = $("status"); s.textContent = text; s.className = "status s-" + kind; }
 const bind = (id, key, fn) => $(id).addEventListener("input", (e) => { state[key] = +e.target.value; syncOutputs(); fn && fn(); });
 bind("time", "time", updateSun); bind("day", "day", updateSun);
 bind("gap", "gap", layout); bind("mz", "mz", () => { layout(); updateSun(); });
-bind("drift", "drift"); bind("wind", "wind"); bind("wdir", "wdir"); bind("dust", "dust"); bind("led", "led"); bind("noise", "noise"); bind("tol", "tol");
+bind("drift", "drift"); bind("wind", "wind"); bind("wdir", "wdir"); bind("dust", "dust"); bind("led", "led");
+const setWeather = () => {
+  const P = PRESETS[state.weather];
+  state.wind = P.wind !== undefined ? 4 + (P.wind - 4) * state.wint : 6; $("wind").value = state.wind;
+  syncOutputs(); updateSun(); respawnAll();
+};
+$("weather").addEventListener("change", (e) => { state.weather = e.target.value; setWeather(); });
+$("wint").addEventListener("input", (e) => { state.wint = +e.target.value / 100; setWeather(); });
+bind("temp", "temp"); bind("msize", "msize", layout); bind("years", "years", updateSun); bind("backlash", "backlash"); bind("kdist", "kdist");
+$("mat").addEventListener("change", (e) => { state.mat = e.target.value; updateSun(); });
+for (const id of ["hood", "median", "undistort", "pulse", "stow30", "dampers"]) $(id).addEventListener("change", (e) => { state[id] = e.target.checked; });
+$("caps").addEventListener("change", (e) => { state.caps = e.target.checked; applySurfaces(); });
+for (const id of ["pinkfb", "glow"]) $(id).addEventListener("change", (e) => { state[id] = e.target.checked; }); bind("noise", "noise"); bind("tol", "tol");
 $("facing").addEventListener("change", (e) => { state.facing = +e.target.value; layout(); });
 $("flash").addEventListener("change", (e) => { state.flash = e.target.checked; });
 $("teach").addEventListener("click", teach);
@@ -897,7 +1323,10 @@ function hud(m) {
     `<span class="chip">Sun <b>${sunEl.toFixed(1)}°</b> elev · <b>${az.toFixed(0)}°</b> az</span>` +
     `<span class="chip">${fmtDay(state.day)} · ${fmtTime(state.time)}</span>` +
     (boost > 3 ? `<span class="chip">3D view brightened ${boost.toFixed(0)}× to see</span>` : "") +
-    (m && m.fx.glare > 0.05 ? `<span class="chip" style="color:var(--warn)">Sun near camera view</span>` : "");
+    (m && m.fx.glare > 0.05 ? `<span class="chip" style="color:var(--warn)">Sun near camera view</span>` : "") +
+    (state.weather !== "clear" ? `<span class="chip">${PRESETS[state.weather].name}</span>` : "") +
+    (W.stow !== null || state.wind > 17 ? `<span class="chip" style="color:var(--warn)">Rows in stow</span>` : "") +
+    (zetaNow < 0 ? `<span class="chip" style="color:var(--bad)">Torsional galloping</span>` : "");
 }
 function physicsReadout() {
   const tw_m = followerAtMarker - followerBase;
@@ -908,9 +1337,21 @@ function physicsReadout() {
   $("p-post").textContent = `${(postLean / D2R).toFixed(3)}°`;
   $("p-shimmer").textContent = `${shimmerSigmaPx().toFixed(4)} px`;
   $("p-lux").textContent = fmtLux(light.total);
-  const flashNow = state.flash && light.total < 50;
-  const { t, g } = expParts(flashNow ? flashExposure() : state.exposure);
-  $("p-exp").textContent = `1/${Math.round(1 / t)} s · ${g.toFixed(1)}×` + (flashNow ? " (flash)" : "");
+  const glowNow = glowNight(), flashNow = !glowNow && state.flash && light.total < 50;
+  const { t, g } = glowNow ? expParts(glowExposure(), TMAX_GLOW) : expParts(flashNow ? flashExposure() : state.exposure);
+  $("p-exp").textContent = (t >= 0.5 ? `${t.toFixed(1)} s` : `1/${Math.round(1 / t)} s`) + ` · ${g.toFixed(1)}×` + (flashNow ? " (flash)" : glowNow ? " (glow)" : "");
+  const gm = minutesSinceSunset();
+  $("p-glowL").textContent = state.glow && gm > 0 ? `${(glowL() * 1000).toFixed(0)} mcd/m² · ${Math.round(gm)} min after sunset` : "–";
+  $("p-vis").textContent = W.vis >= 10000 ? `${(W.vis / 1000).toFixed(0)} km` : W.vis >= 1000 ? `${(W.vis / 1000).toFixed(1)} km` : `${W.vis.toFixed(0)} m`;
+  $("p-precip").textContent = W.rain ? `rain ${W.rain.toFixed(0)} mm/h` + (W.hail ? ` · hail ${W.hail.toFixed(0)} mm` : "") : W.snow ? `snow ${W.snow.toFixed(1)} mm/h water` : "none";
+  if (W.hail) { const h = hailPhysics(W.hail); $("p-hail").textContent = `${h.E.toFixed(1)} J at ${h.v.toFixed(0)} m/s`; } else $("p-hail").textContent = "–";
+  const ts = sensorTemp(); $("p-temp").textContent = `${ts.toFixed(0)} °C` + (ts > 70 ? " · over 70 °C rating" : ts > 50 ? " · above 50 °C stable-image range" : "");
+  $("p-temp").style.color = ts > 70 ? "var(--bad)" : ts > 50 ? "var(--warn)" : "";
+  $("p-gallop").textContent = `${(zetaNow * 100).toFixed(1)}%` + (zetaNow < 0 ? " · galloping" : "");
+  $("p-gallop").style.color = zetaNow < 0 ? "var(--bad)" : "";
+  $("p-link").textContent = `${sign(linkBacklash, 2)} + ${sign(linkFlex, 2)}`;
+  $("p-blur").textContent = `${blurPx.toFixed(2)} px`;
+  $("p-fade").textContent = `${(colorLeft() * 100).toFixed(0)}%` + (MATS[state.mat].retro ? ` · R_A ${raNow().toFixed(0)}` : "");
 }
 
 function resize() {
@@ -948,11 +1389,11 @@ function readout(m) {
   const clear = () => { $("r-est").textContent = "–"; $("r-mis-est").textContent = "–"; $("r-err").textContent = "–"; $("r-485").textContent = "–"; };
   if (!m.found) {
     clear();
-    setStatus(light.total < 50 && !state.flash ? "Too dark" : m.fx.glare > 0.2 ? "Sun glare" : "Markers lost", "bad"); return;
+    setStatus(light.total < 50 && !state.flash && !state.glow ? "Too dark" : m.fx.glare > 0.2 ? "Sun glare" : state.weather !== "clear" ? `Markers lost · ${PRESETS[state.weather].name.toLowerCase()}` : "Markers lost", "bad"); return;
   }
   const e = estimate(m);
   if (!e) { clear(); $("r-est").textContent = `${m.feature.toFixed(1)} px`; setStatus("Not taught", "idle"); return; }
-  const err = e.angle - followerAtMarker;
+  const err = e.angle - m.truth;
   $("r-est").textContent = sign(e.angle, 2);
   $("r-mis-est").textContent = sign(e.angle - driveAngle, 2);
   $("r-err").textContent = sign(err, 2);

@@ -53,6 +53,7 @@ nav:
     - camera-concept/index.md
     - Field Simulation: camera-concept/simulation.md
     - Results: camera-concept/results.md
+    - Test Log: camera-concept/log.md
     - Cost Under $10: camera-concept/cost.md
     - Gazebo Model: camera-concept/gazebo.md
 

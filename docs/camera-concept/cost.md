@@ -18,12 +18,17 @@ Estimates at about 100 units. Prices are not quotes.
 | 3D-printed ASA shell, about 40 g | $0.80 |
 | Clear window + gasket + small cable gland | $0.50 |
 | Mounting: U-bolt or hose clamp + screws | $0.60 |
-| Markers on the follower row (colored or retroreflective tape) | $0.30 |
-| **Total** | **≈ $7.70** |
+| Markers: 10-year-rated prismatic retroreflective sheeting, pink and yellow | $0.40 |
+| 20 cd LED + driver MOSFET for the 2 ms night flash | $0.35 |
+| Lens hood and marker snow caps (printed with the shell) | $0.20 |
+| Water-shedding window coating | $0.05 |
+| **Total** | **≈ $8.40** |
+
+The extra items are what the [Test Log](log.md) showed it takes to work in every condition: night, rain, hail, snow, dust and 10 years of UV. Torsional dampers, if ARRAY adds them, are part of the tracker structure and not in this unit cost.
 
 ## What the margin buys
 
-About $2.30 is left under $10. That can cover price swings or a second camera facing the other way, so one camera always has the sun behind it.
+About $1.60 is left under $10. That can cover price swings.
 
 ## Trade-offs of no PCB
 
