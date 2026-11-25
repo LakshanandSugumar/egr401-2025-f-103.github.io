@@ -4,36 +4,53 @@ title: Results
 
 # Simulation Results
 
-Each row is one run of 40 random follower angles between −55° and +55°, using the [field simulation](simulation.md) with a 7 m row gap. The camera was taught once at noon unless noted. Default conditions are 4 m/s wind, 10% lens dust and 3 DN sensor noise. Results vary a little from run to run.
+Each row is one run of 40 random follower angles between −55° and +55°, using the physics-based [field simulation](simulation.md) with a 7 m row gap. The camera was taught once at noon. Defaults are 6 m/s mean wind with gusts, 10% lens dust and 3 DN read noise. Errors are measured against the true angle at the markers. Results vary a little from run to run.
 { .md-caption }
 
-| Conditions | Markers read | Median error | 95% within | Within ±1° |
+## Daylight
+
+| Conditions | Markers read | 95% within | Max error | Tube twist at markers |
 | --- | ---: | ---: | ---: | ---: |
-| Jun 21, 12:00 | 37/40 | 0.06° | 0.25° | 37/37 |
-| Jun 21, 09:00 | 32/40 | 0.10° | 0.24° | 32/32 |
-| Jun 21, 16:00 | 34/40 | 0.07° | 0.26° | 34/34 |
-| Jun 21, 16:00, 15 m/s wind, 40% dust | 37/40 | 0.11° | 0.36° | 37/37 |
-| Jun 21, 06:12, camera facing the low sun (east) | 36/40 | 0.17° | 0.44° | 36/36 |
-| Jun 21, 06:12, camera facing away from the sun (west) | 37/40 | 0.04° | 0.23° | 37/37 |
-| Dec 21, 18:30, dark, no flash | 0/40 | – | – | – |
-| Dec 21, 18:30, dark, retroreflective markers + flash | 39/40 | 0.19° | 0.60° | 39/39 |
+| Jun 21, 12:00, markers at the drive point | 35/40 | 0.23° | 0.31° | 0.00° |
+| Same, 12 m/s wind | 38/40 | 0.36° | 0.36° | 0.00° |
+| Jun 21, 12:00, markers 25 m out | 39/40 | 0.28° | 0.30° | up to 1.99° |
+| Same, 12 m/s wind | 39/40 | 0.20° | 0.47° | up to 5.72° |
+| Jun 21, 09:00 | 36/40 | 0.33° | 0.53° | 0.00° |
+| Jun 21, 06:12, camera facing the low sun | 36/40 | 0.59° | 0.60° | 0.00° |
+
+## Night (Dec 21, 18:30, sun 12° below the horizon)
+
+| Conditions | Markers read | 95% within | Max error |
+| --- | ---: | ---: | ---: |
+| No flash | 0/40 | – | – |
+| Flash, 4 cd LED | 1/40 | – | – |
+| Flash, 8 cd LED | 30/40 | 0.52° | 0.52° |
+| Flash, 20 cd LED | 38/40 | 0.35° | 0.36° |
+| Flash, 40 cd LED | 37/40 | 0.26° | 0.33° |
 
 !!! success "Accuracy"
-    Every reading the camera made in daylight or with the flash at night was within the ±1° target. Most were within 0.3°.
+    Every reading the camera made was within the ±1° target, including in strong wind, low sun and at night with a bright enough flash.
 
-## What the simulation exposed
+## What the physics showed
 
-**The panel hides the far marker near edge-on.** At about +6° to +14°, the camera looks almost along the panel surface, and the module partly hides the yellow marker on the far edge. The yellow-minus-pink gap then folds back, so one gap value can match two angles. The near pink marker is never hidden, so the estimator uses its position to pick the right reading. Most of the missed readings in the table are at these angles.
+**Wind twists the follower row far more than ±1°, so where you put the markers matters.** The follower is driven at one point, and wind torque twists the tube along its length. With the assumed 60 m row and 127 mm tube, the angle 25 m from the drive point swings up to 2° in a 6 m/s breeze and almost 6° at 12 m/s, oscillating at the tube's 1.9 Hz twist frequency. The camera measured these swings correctly, because the markers move with the row. That changes the question:
 
-**It can't see at night without help.** After dark, the camera has to turn the gain up so far that noise buries the markers. Retroreflective markers with a small LED flash fix this: the camera takes one frame with the flash and one without, and subtracts them. A table taught at noon still works at night.
+- **Markers at the drive point** measure the linkage misalignment ARRAY cares about, with no wind twist mixed in.
+- **Markers near the row end** measure linkage misalignment plus wind twist. That's useful for structural monitoring, but readings need averaging over a few seconds to remove the gust swings.
 
-**Facing the sun costs accuracy.** With the camera facing east at sunrise, glare lowers contrast and the 95% error roughly doubles, though it stays inside ±1°. A camera facing west at the same time isn't affected. Mounting cameras so the sun is behind them, or adding a second camera facing the other way, avoids this.
+**The camera needs a 20 cd or brighter LED at night.** The retroreflected light falls off with the square of the distance. An 8 cd LED is marginal at 7 m, and 4 cd is too dim. A 20 cd LED gives reliable readings.
 
-**Wind and dust matter less than expected.** Strong wind shakes the camera post, but both markers move together, so the gap between them barely changes. Dust lowers contrast without moving the marker centers much.
+**The camera post barely moves.** Under 12 m/s wind a 2 in. steel post leans about 0.01°, and the two-marker gap cancels even that.
+
+**Heat shimmer is negligible.** At 7 m over hot ground it moves the markers about 0.006 pixel.
+
+**Facing the low sun costs accuracy but stays in spec.** The 95% error roughly doubles at sunrise with the camera facing east.
+
+**Near edge-on the module hides the far marker.** At about +6° to +14°, the near pink marker picks the right reading.
 
 ## Still to prove with hardware
 
-- Real color behavior of an OV2640 camera in Arizona sun, including auto white balance
-- Heat shimmer above hot modules at 6–8 m
+- Real color behavior and auto white balance of an OV2640 camera in Arizona sun
+- The real retroreflected return from a chosen LED and tape at 7 m
+- ARRAY's real row length, tube size and drive-point location, which set the twist
 - Marker fading under UV over months
-- The real retroreflective return from a small LED at 7 m
