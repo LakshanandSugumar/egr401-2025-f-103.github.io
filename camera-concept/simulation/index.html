@@ -743,6 +743,8 @@
       
         
       
+        
+      
     
     
     
@@ -930,6 +932,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../log/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Test Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../cost/" class="md-nav__link">
         
   
@@ -1059,7 +1089,13 @@
 
 
 <h1 id="field-simulation">Field Simulation</h1>
-<p>A physics-based model of the field near Phoenix. It covers the real sun path and daylight levels, gusting wind that twists the torque tube, a camera post that bends in the wind, and a camera sensor with real exposure limits. It runs in your browser. Built by Lakshanand Sugumar.</p>
+<p>A physics-based model of the field near Phoenix, covering:
+- <strong>Sun and light:</strong> the real sun path and daylight, twilight and night light levels
+- <strong>Weather:</strong> rain, thunderstorms, hail, snow, dust storms and fog
+- <strong>Structure:</strong> gusting wind that twists the torque tube, including torsional galloping, and drive-linkage backlash
+- <strong>Optics:</strong> a real lens with distortion, and UV fading of the markers
+- <strong>Sensor:</strong> a camera with real exposure limits and noise</p>
+<p>It runs in your browser. Built by Lakshanand Sugumar.</p>
 <p><a class="md-button md-button--primary" href="../sim/" target="_blank">Open full screen</a></p>
 <div style="position:relative; width:100%; aspect-ratio:16/10; min-height:600px; border:1px solid var(--md-default-fg-color--lightest); border-radius:8px; overflow:hidden">
   <iframe src="../sim/index.html" title="Tilt camera field simulation" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; border:0"></iframe>
@@ -1068,9 +1104,10 @@
 <h2 id="try-this">Try this</h2>
 <ol>
 <li>Press <strong>Teach</strong> at midday. This is the on-site calibration sweep against a reference inclinometer.</li>
-<li>Press <strong>Run 40-angle test</strong> to see the accuracy.</li>
-<li>Move <strong>Markers and camera along the row</strong> out toward the row end and raise the <strong>wind</strong>. Watch the tube twist under the markers.</li>
-<li>Slide past sunset. Without the flash the camera sees nothing. Turn the flash on and lower the <strong>LED intensity</strong> to see where it stops working.</li>
+<li>Press <strong>Run 40-angle test</strong> to see the accuracy, or <strong>Find marker losses</strong> to sweep every degree and list where a marker goes missing and why.</li>
+<li>Pick a <strong>Weather</strong> condition, then turn the <strong>Fixes</strong> off one at a time to see what each one does.</li>
+<li>Move <strong>Markers and camera along the row</strong> toward the row end, raise the wind, and watch the tube twist.</li>
+<li>Slide past sunset. The flash keeps it working all night. Try the <strong>glow-in-the-dark cores</strong> instead and watch them fade.</li>
 </ol>
 <h2 id="the-physics">The physics</h2>
 <table>
@@ -1078,76 +1115,76 @@
 <tr>
 <th>Part</th>
 <th>Model</th>
-<th>Source of the numbers</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Sun position</td>
-<td>Solar declination and hour angle for 33.4° N</td>
-<td>Standard solar geometry</td>
+<td>Sun</td>
+<td>Solar position for 33.4° N. Direct beam through the Kasten–Young air mass, about 105 lm/W. Clear-sky diffuse light and published twilight levels down to 0.0007 lx</td>
 </tr>
 <tr>
-<td>Sunlight</td>
-<td>Direct beam through the atmosphere using the Kasten–Young air mass, about 105 lm/W</td>
-<td>Standard clear-sky model</td>
+<td>Clouds</td>
+<td>Overcast cuts the direct beam and scales the diffuse light for each weather type</td>
 </tr>
 <tr>
-<td>Twilight</td>
-<td>Sky illuminance from 600 lx at sunset to 0.0007 lx at −18°</td>
-<td>Published twilight levels</td>
+<td>Visibility</td>
+<td>Koschmieder extinction, σ = 3.912 / visibility. Rain adds σ ≈ 0.21 R^0.74 per km</td>
+</tr>
+<tr>
+<td>Rain, snow, hail</td>
+<td>Falling at real speeds and drifting with the wind. Hail falls at its terminal velocity with impact energy shown. Drops and flakes on the window refract and blur the image</td>
 </tr>
 <tr>
 <td>Tracking</td>
-<td>True tracking with backtracking for the row gap, ±60° limit, stow at night</td>
-<td>Standard single-axis backtracking geometry</td>
+<td>True tracking with backtracking. Generic stow rules: hail and snow to 60°, wind above 17 m/s to 30° or flat</td>
 </tr>
 <tr>
 <td>Wind</td>
-<td>Mean speed plus gusts with 20% turbulence intensity and a 25 m length scale</td>
-<td>Typical for open desert terrain near the ground</td>
-</tr>
-<tr>
-<td>Wind torque</td>
-<td>Torque per metre = ½ ρ U² · C<sub>M</sub>(tilt) · chord²</td>
-<td>Hinge-moment form used for tracker wind design</td>
+<td>Gusts with 20% turbulence intensity and a 25 m length scale. Torque = ½ρU² · C<sub>M</sub>(tilt) · chord²</td>
 </tr>
 <tr>
 <td>Tube twist</td>
-<td>Steel torsion, G = 79.3 GPa, fixed at the drive point. First twist mode about 1.9 Hz, 3% damping</td>
-<td>Torsion of a thin-walled square tube</td>
+<td>Steel torsion, first mode about 1.9 Hz, 3% damping. Galloping is modeled as negative aerodynamic damping near flat tilt</td>
+</tr>
+<tr>
+<td>Drive linkage</td>
+<td>A backlash deadband that flips side when the torque reverses, plus elastic wind-up</td>
 </tr>
 <tr>
 <td>Camera post</td>
-<td>2 in. schedule-40 steel pipe, cantilever bending under wind drag</td>
-<td>Beam bending</td>
+<td>2 in. schedule-40 steel pipe bending under wind drag</td>
 </tr>
 <tr>
-<td>Heat shimmer</td>
-<td>Angle-of-arrival jitter from air turbulence strength C<sub>n</sub>²</td>
-<td>Standard turbulence optics</td>
+<td>Lens</td>
+<td>Barrel distortion with k₁ adjustable</td>
 </tr>
 <tr>
-<td>Camera exposure</td>
-<td>1/8000 s to 1/15 s, then gain up to 16×. Read noise and shot noise grow with gain</td>
-<td>Typical small CMOS sensor</td>
+<td>Sensor</td>
+<td>640 × 480. Auto exposure from 1/8000 s to 1/15 s, then gain to 16×. Read noise, shot noise and dark current in electrons, with dark current doubling every 6.5 °C. Rounded to 8 bits after the noise</td>
+</tr>
+<tr>
+<td>Sensor heat</td>
+<td>Enclosure temperature from the air and the sun. Warns above the OV2640's 50 °C stable-image and 70 °C operating limits</td>
 </tr>
 <tr>
 <td>Night flash</td>
-<td>Retroreflected luminance = R<sub>A</sub> × LED intensity ÷ distance², R<sub>A</sub> = 250 cd/(lx·m²). Flash frames use their own exposure</td>
-<td>Prismatic retroreflective sheeting rating</td>
+<td>Retroreflected luminance = R<sub>A</sub> × LED intensity ÷ distance². Flash frames can be 2 ms pulses</td>
+</tr>
+<tr>
+<td>Glow cores</td>
+<td>Strontium aluminate afterglow decaying as t^−1.1. Night stacking of ten 2 s exposures</td>
+</tr>
+<tr>
+<td>UV aging</td>
+<td>Color fades exponentially with years in the field, at a different rate for each marker material</td>
 </tr>
 </tbody>
 </table>
 <div class="admonition warning">
 <p class="admonition-title">Assumed values, not from ARRAY</p>
-<p>ARRAY hasn't given row dimensions, tube size or wind data yet, so these are assumptions:
-60 m rows driven at the middle, a 127 mm square tube with 3.5 mm wall, 28 kg modules, and a hinge-moment peak of C<sub>M</sub> = 0.13.
-The twist results scale directly with these, so swap in ARRAY's numbers when they arrive.</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Still not modeled</p>
-<p>Aeroelastic effects such as torsional galloping, the drive linkage's own flex and backlash, real lens distortion, motion blur during long night exposures, marker fading from UV, and rain.</p>
+<p>ARRAY hasn't given row dimensions, tube size, stow angles or wind data yet, so these are assumptions:
+60 m rows driven at the middle, a 127 mm square tube with 3.5 mm wall, 28 kg modules, a hinge-moment peak of C<sub>M</sub> = 0.13, galloping onset near 18 m/s, and linkage stiffness of 1.5 MN·m/rad.
+Fade rates, glow brightness and sensor noise are representative values, not measurements. Swap in real numbers when they arrive.</p>
 </div>
 <p>The camera reports the angle to the ARRAY controller over RS-485. ARRAY hasn't specified the controller's message format yet, so the simulation shows only the angle.</p>
 

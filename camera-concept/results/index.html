@@ -17,7 +17,7 @@
         <link rel="prev" href="../simulation/">
       
       
-        <link rel="next" href="../cost/">
+        <link rel="next" href="../log/">
       
       
         
@@ -741,6 +741,8 @@
       
         
       
+        
+      
     
     
     
@@ -891,10 +893,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#daylight" class="md-nav__link">
+  <a href="#daytime-and-weather" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Daylight
+        Daytime and weather
       
     </span>
   </a>
@@ -902,10 +904,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#night-dec-21-1830-sun-12-below-the-horizon" class="md-nav__link">
+  <a href="#night-dec-21-retroreflective-markers-20-cd-led-2-ms-flash-pulse" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Night (Dec 21, 18:30, sun 12° below the horizon)
+        Night (Dec 21, retroreflective markers, 20 cd LED, 2 ms flash pulse)
       
     </span>
   </a>
@@ -913,10 +915,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-the-physics-showed" class="md-nav__link">
+  <a href="#mechanics-and-aging" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What the physics showed
+        Mechanics and aging
       
     </span>
   </a>
@@ -924,10 +926,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#still-to-prove-with-hardware" class="md-nav__link">
+  <a href="#what-it-takes-to-work-in-all-conditions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Still to prove with hardware
+        What it takes to work in all conditions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-it-found-about-the-tracker-itself" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it found about the tracker itself
       
     </span>
   </a>
@@ -938,6 +951,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../log/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Test Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1033,10 +1074,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#daylight" class="md-nav__link">
+  <a href="#daytime-and-weather" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Daylight
+        Daytime and weather
       
     </span>
   </a>
@@ -1044,10 +1085,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#night-dec-21-1830-sun-12-below-the-horizon" class="md-nav__link">
+  <a href="#night-dec-21-retroreflective-markers-20-cd-led-2-ms-flash-pulse" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Night (Dec 21, 18:30, sun 12° below the horizon)
+        Night (Dec 21, retroreflective markers, 20 cd LED, 2 ms flash pulse)
       
     </span>
   </a>
@@ -1055,10 +1096,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-the-physics-showed" class="md-nav__link">
+  <a href="#mechanics-and-aging" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What the physics showed
+        Mechanics and aging
       
     </span>
   </a>
@@ -1066,10 +1107,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#still-to-prove-with-hardware" class="md-nav__link">
+  <a href="#what-it-takes-to-work-in-all-conditions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Still to prove with hardware
+        What it takes to work in all conditions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-it-found-about-the-tracker-itself" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it found about the tracker itself
       
     </span>
   </a>
@@ -1097,128 +1149,232 @@
 
 
 <h1 id="simulation-results">Simulation Results</h1>
-<p class="md-caption">Each row is one run of 40 random follower angles between −55° and +55°, using the physics-based <a href="../simulation/">field simulation</a> with a 7 m row gap. The camera was taught once at noon. Defaults are 6 m/s mean wind with gusts, 10% lens dust and 3 DN read noise. Errors are measured against the true angle at the markers. Results vary a little from run to run.</p>
-<h2 id="daylight">Daylight</h2>
-<table>
-<thead>
-<tr>
-<th>Conditions</th>
-<th style="text-align: right;">Markers read</th>
-<th style="text-align: right;">95% within</th>
-<th style="text-align: right;">Max error</th>
-<th style="text-align: right;">Tube twist at markers</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Jun 21, 12:00, markers at the drive point</td>
-<td style="text-align: right;">35/40</td>
-<td style="text-align: right;">0.23°</td>
-<td style="text-align: right;">0.31°</td>
-<td style="text-align: right;">0.00°</td>
-</tr>
-<tr>
-<td>Same, 12 m/s wind</td>
-<td style="text-align: right;">38/40</td>
-<td style="text-align: right;">0.36°</td>
-<td style="text-align: right;">0.36°</td>
-<td style="text-align: right;">0.00°</td>
-</tr>
-<tr>
-<td>Jun 21, 12:00, markers 25 m out</td>
-<td style="text-align: right;">39/40</td>
-<td style="text-align: right;">0.28°</td>
-<td style="text-align: right;">0.30°</td>
-<td style="text-align: right;">up to 1.99°</td>
-</tr>
-<tr>
-<td>Same, 12 m/s wind</td>
-<td style="text-align: right;">39/40</td>
-<td style="text-align: right;">0.20°</td>
-<td style="text-align: right;">0.47°</td>
-<td style="text-align: right;">up to 5.72°</td>
-</tr>
-<tr>
-<td>Jun 21, 09:00</td>
-<td style="text-align: right;">36/40</td>
-<td style="text-align: right;">0.33°</td>
-<td style="text-align: right;">0.53°</td>
-<td style="text-align: right;">0.00°</td>
-</tr>
-<tr>
-<td>Jun 21, 06:12, camera facing the low sun</td>
-<td style="text-align: right;">36/40</td>
-<td style="text-align: right;">0.59°</td>
-<td style="text-align: right;">0.60°</td>
-<td style="text-align: right;">0.00°</td>
-</tr>
-</tbody>
-</table>
-<h2 id="night-dec-21-1830-sun-12-below-the-horizon">Night (Dec 21, 18:30, sun 12° below the horizon)</h2>
-<table>
-<thead>
-<tr>
-<th>Conditions</th>
-<th style="text-align: right;">Markers read</th>
-<th style="text-align: right;">95% within</th>
-<th style="text-align: right;">Max error</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>No flash</td>
-<td style="text-align: right;">0/40</td>
-<td style="text-align: right;">–</td>
-<td style="text-align: right;">–</td>
-</tr>
-<tr>
-<td>Flash, 4 cd LED</td>
-<td style="text-align: right;">1/40</td>
-<td style="text-align: right;">–</td>
-<td style="text-align: right;">–</td>
-</tr>
-<tr>
-<td>Flash, 8 cd LED</td>
-<td style="text-align: right;">30/40</td>
-<td style="text-align: right;">0.52°</td>
-<td style="text-align: right;">0.52°</td>
-</tr>
-<tr>
-<td>Flash, 20 cd LED</td>
-<td style="text-align: right;">38/40</td>
-<td style="text-align: right;">0.35°</td>
-<td style="text-align: right;">0.36°</td>
-</tr>
-<tr>
-<td>Flash, 40 cd LED</td>
-<td style="text-align: right;">37/40</td>
-<td style="text-align: right;">0.26°</td>
-<td style="text-align: right;">0.33°</td>
-</tr>
-</tbody>
-</table>
+<p>Results with every fix in place. The <a href="../log/">Test Log</a> records what failed, why, and how it was fixed.</p>
+<p class="md-caption">Each row is one run of 40 random follower angles between −55° and +55°, using the <a href="../simulation/">field simulation</a> with a 7 m row gap and 10 cm markers. The camera was taught once at noon on June 21. Errors are against the true angle at the markers. Defaults: 6 m/s wind with gusts, 40 °C air, 10% lens dust, 4 e⁻ read noise. Results vary a little from run to run.</p>
 <div class="admonition success">
-<p class="admonition-title">Accuracy</p>
-<p>Every reading the camera made was within the ±1° target, including in strong wind, low sun and at night with a bright enough flash.</p>
+<p class="admonition-title">Every condition below is within the ±1° target</p>
+<p>Every reading in every condition below was within ±1°, and the camera produced a reading at every angle.</p>
 </div>
-<h2 id="what-the-physics-showed">What the physics showed</h2>
-<p><strong>Wind twists the follower row far more than ±1°, so where you put the markers matters.</strong> The follower is driven at one point, and wind torque twists the tube along its length. With the assumed 60 m row and 127 mm tube, the angle 25 m from the drive point swings up to 2° in a 6 m/s breeze and almost 6° at 12 m/s, oscillating at the tube's 1.9 Hz twist frequency. The camera measured these swings correctly, because the markers move with the row. That changes the question:</p>
+<h2 id="daytime-and-weather">Daytime and weather</h2>
+<table>
+<thead>
+<tr>
+<th>Conditions</th>
+<th style="text-align: right;">Markers read</th>
+<th style="text-align: right;">95% within</th>
+<th style="text-align: right;">Max error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clear, 12:00</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.17°</td>
+<td style="text-align: right;">0.23°</td>
+</tr>
+<tr>
+<td>Clear, 09:00</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.60°</td>
+<td style="text-align: right;">0.68°</td>
+</tr>
+<tr>
+<td>Sunrise 06:12, camera facing the sun</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.32°</td>
+<td style="text-align: right;">0.34°</td>
+</tr>
+<tr>
+<td>Windy, 14 m/s</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.48°</td>
+<td style="text-align: right;">0.50°</td>
+</tr>
+<tr>
+<td>Light rain</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.37°</td>
+<td style="text-align: right;">0.40°</td>
+</tr>
+<tr>
+<td>Monsoon thunderstorm, 50 mm/h, 15 m/s</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.53°</td>
+<td style="text-align: right;">0.58°</td>
+</tr>
+<tr>
+<td>Hail, 25 mm stones</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.42°</td>
+<td style="text-align: right;">0.48°</td>
+</tr>
+<tr>
+<td>Snow</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.24°</td>
+<td style="text-align: right;">0.24°</td>
+</tr>
+<tr>
+<td>Dust storm (haboob), 60 m visibility, 18 m/s</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.45°</td>
+<td style="text-align: right;">0.47°</td>
+</tr>
+<tr>
+<td>Fog, 120 m visibility</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.19°</td>
+<td style="text-align: right;">0.49°</td>
+</tr>
+<tr>
+<td>50 °C air (sensor about 65 °C)</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.29°</td>
+<td style="text-align: right;">0.46°</td>
+</tr>
+</tbody>
+</table>
+<h2 id="night-dec-21-retroreflective-markers-20-cd-led-2-ms-flash-pulse">Night (Dec 21, retroreflective markers, 20 cd LED, 2 ms flash pulse)</h2>
+<table>
+<thead>
+<tr>
+<th>Time</th>
+<th style="text-align: right;">Markers read</th>
+<th style="text-align: right;">95% within</th>
+<th style="text-align: right;">Max error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>17:45, dusk</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.51°</td>
+<td style="text-align: right;">0.61°</td>
+</tr>
+<tr>
+<td>18:30</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.53°</td>
+<td style="text-align: right;">0.59°</td>
+</tr>
+<tr>
+<td>19:30</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.40°</td>
+<td style="text-align: right;">0.69°</td>
+</tr>
+<tr>
+<td>04:30, pre-dawn</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.53°</td>
+<td style="text-align: right;">0.54°</td>
+</tr>
+<tr>
+<td>18:30 in a thunderstorm, markers 25 m out</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.44°</td>
+<td style="text-align: right;">0.55°</td>
+</tr>
+</tbody>
+</table>
+<h2 id="mechanics-and-aging">Mechanics and aging</h2>
+<table>
+<thead>
+<tr>
+<th>Conditions</th>
+<th style="text-align: right;">Markers read</th>
+<th style="text-align: right;">95% within</th>
+<th style="text-align: right;">Max error</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Markers 25 m out, 12 m/s</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.11°</td>
+<td style="text-align: right;">0.11°</td>
+<td>Tube twisted up to 5.8° under the markers, measured correctly</td>
+</tr>
+<tr>
+<td>Night, 25 m out, 12 m/s</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.42°</td>
+<td style="text-align: right;">0.49°</td>
+<td>2 ms flash pulse freezes the twisting row</td>
+</tr>
+<tr>
+<td>Prismatic sheeting after 10 years</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.37°</td>
+<td style="text-align: right;">0.51°</td>
+<td></td>
+</tr>
+<tr>
+<td>Lens distortion k₁ = −0.40</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.19°</td>
+<td style="text-align: right;">0.31°</td>
+<td></td>
+</tr>
+<tr>
+<td>Drive linkage backlash 1°</td>
+<td style="text-align: right;">40/40</td>
+<td style="text-align: right;">0.32°</td>
+<td style="text-align: right;">0.34°</td>
+<td>Measured as real misalignment</td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-it-takes-to-work-in-all-conditions">What it takes to work in all conditions</h2>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Near-marker fallback in firmware</td>
+<td>The torque tube blocks the far marker at about +5° to +14°</td>
+</tr>
+<tr>
+<td>Lens hood + water-shedding window coating</td>
+<td>Rain, hail and snow on the window</td>
+</tr>
+<tr>
+<td>7-frame median in precipitation, 3 otherwise</td>
+<td>Drops and flakes crossing the markers</td>
+</tr>
+<tr>
+<td>Noise-adaptive color threshold</td>
+<td>Faded markers and dim conditions</td>
+</tr>
+<tr>
+<td>Snow caps over the markers</td>
+<td>Snow on the marker faces</td>
+</tr>
+<tr>
+<td>10-year-rated prismatic retroreflective sheeting</td>
+<td>UV fading. Vinyl fails within 3 years, fluorescent within 6 months</td>
+</tr>
+<tr>
+<td>20 cd or brighter LED, 2 ms pulse, flash/no-flash subtraction</td>
+<td>Night, and freezing the row's motion</td>
+</tr>
+<tr>
+<td>Teach once on site against a reference inclinometer</td>
+<td>Absorbs lens distortion and mounting geometry</td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-it-found-about-the-tracker-itself">What it found about the tracker itself</h2>
 <ul>
-<li><strong>Markers at the drive point</strong> measure the linkage misalignment ARRAY cares about, with no wind twist mixed in.</li>
-<li><strong>Markers near the row end</strong> measure linkage misalignment plus wind twist. That's useful for structural monitoring, but readings need averaging over a few seconds to remove the gust swings.</li>
+<li><strong>Wind twist:</strong> with the assumed tube, the follower 25 m from the drive point twists up to about 6° at 12 m/s and about 9° at 19 m/s. Markers at the drive point measure linkage misalignment alone. Markers near the row end also see wind twist.</li>
+<li><strong>Torsional galloping:</strong> in flat stow above about 18 m/s the twist damping turns negative. Torsional dampers fix it. A 30° stow avoids it but takes a large steady twist. This is ARRAY's structure, so raise it with ARRAY.</li>
 </ul>
-<p><strong>The camera needs a 20 cd or brighter LED at night.</strong> The retroreflected light falls off with the square of the distance. An 8 cd LED is marginal at 7 m, and 4 cd is too dim. A 20 cd LED gives reliable readings.</p>
-<p><strong>The camera post barely moves.</strong> Under 12 m/s wind a 2 in. steel post leans about 0.01°, and the two-marker gap cancels even that.</p>
-<p><strong>Heat shimmer is negligible.</strong> At 7 m over hot ground it moves the markers about 0.006 pixel.</p>
-<p><strong>Facing the low sun costs accuracy but stays in spec.</strong> The 95% error roughly doubles at sunrise with the camera facing east.</p>
-<p><strong>Near edge-on the module hides the far marker.</strong> At about +6° to +14°, the near pink marker picks the right reading.</p>
-<h2 id="still-to-prove-with-hardware">Still to prove with hardware</h2>
-<ul>
-<li>Real color behavior and auto white balance of an OV2640 camera in Arizona sun</li>
-<li>The real retroreflected return from a chosen LED and tape at 7 m</li>
-<li>ARRAY's real row length, tube size and drive-point location, which set the twist</li>
-<li>Marker fading under UV over months</li>
-</ul>
+<p>These numbers depend on assumed row and tube sizes. Swap in ARRAY's values when they arrive.</p>
 
 
 
@@ -1276,13 +1432,13 @@
         
         
           
-          <a href="../cost/" class="md-footer__link md-footer__link--next" aria-label="Next: Cost Under $10">
+          <a href="../log/" class="md-footer__link md-footer__link--next" aria-label="Next: Test Log">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Cost Under $10
+                Test Log
               </div>
             </div>
             <div class="md-footer__button md-icon">
