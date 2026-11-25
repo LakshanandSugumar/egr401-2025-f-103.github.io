@@ -1,0 +1,199 @@
+<?xml version="1.0" ?>
+<!--
+  Team 20 camera concept: Gazebo (Harmonic) world.
+
+  Layout (metres). Rows run along X. The drive row sits at y = 0 and the
+  follower row at y = ROW_GAP (7 m). A camera on a fixed post at the drive row
+  looks across (+Y) at the follower row. The follower panel carries a pink
+  marker on its near edge and a yellow marker on its far edge, offset along
+  the row (x = -0.5 and x = +0.5) so they never overlap in the image.
+
+  The follower panel turns on a revolute joint about X. Its angle is set by a
+  JointPositionController listening on /follower/tilt_cmd (gz.msgs.Double,
+  radians). Ground truth is published by JointStatePublisher.
+
+  Run:  gz sim -r tilt_camera.sdf
+-->
+<sdf version="1.9">
+  <world name="tilt_camera">
+
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <scene>
+      <ambient>0.55 0.55 0.55 1</ambient>
+      <background>0.62 0.78 0.95 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <!-- Arizona sun: high and slightly behind the camera. Edit the direction to test glare. -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 -10 20 0 0 0</pose>
+      <diffuse>1 0.97 0.9 1</diffuse>
+      <specular>0.3 0.3 0.3 1</specular>
+      <direction>0.2 0.5 -0.9</direction>
+    </light>
+
+    <!-- Desert ground -->
+    <model name="ground">
+      <static>true</static>
+      <link name="link">
+        <collision name="c"><geometry><plane><normal>0 0 1</normal><size>60 60</size></plane></geometry></collision>
+        <visual name="v">
+          <geometry><plane><normal>0 0 1</normal><size>60 60</size></plane></geometry>
+          <material><ambient>0.72 0.62 0.48 1</ambient><diffuse>0.72 0.62 0.48 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ============ DRIVE ROW (y = 0) ============ -->
+    <model name="drive_row">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <!-- torque tube -->
+      <link name="tube">
+        <pose>0 0 1.5 0 1.5708 0</pose>
+        <visual name="v">
+          <geometry><cylinder><radius>0.06</radius><length>8</length></cylinder></geometry>
+          <material><ambient>0.5 0.5 0.52 1</ambient><diffuse>0.5 0.5 0.52 1</diffuse></material>
+        </visual>
+      </link>
+      <!-- panel (shown flat; the drive row is not what we measure) -->
+      <link name="panel">
+        <pose>0 0 1.58 0 0 0</pose>
+        <visual name="v">
+          <geometry><box><size>8 2 0.04</size></box></geometry>
+          <material><ambient>0.08 0.12 0.25 1</ambient><diffuse>0.08 0.12 0.25 1</diffuse><specular>0.6 0.6 0.7 1</specular></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ============ CAMERA ON A FIXED POST ============ -->
+    <!-- Post at the drive row's edge facing the follower. Camera is 0.5 m above the pivot height
+         and tilted down slightly so the follower panel fills the middle of the frame. -->
+    <model name="camera_post">
+      <static>true</static>
+      <pose>0 1.2 0 0 0 0</pose>
+      <link name="post">
+        <pose>0 0 1.0 0 0 0</pose>
+        <visual name="v">
+          <geometry><cylinder><radius>0.04</radius><length>2.0</length></cylinder></geometry>
+          <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+        </visual>
+      </link>
+      <link name="camera_link">
+        <!-- yaw +90 deg so the camera's +X looks along world +Y; slight downward pitch -->
+        <pose>0 0 2.0 0 0.086 1.5708</pose>
+        <visual name="shell">
+          <geometry><box><size>0.08 0.10 0.07</size></box></geometry>
+          <material><ambient>0.15 0.15 0.15 1</ambient><diffuse>0.15 0.15 0.15 1</diffuse></material>
+        </visual>
+        <sensor name="tilt_camera" type="camera">
+          <!-- ESP32-CAM / OV2640-class: VGA, about 60 degree horizontal field of view -->
+          <camera>
+            <horizontal_fov>1.047</horizontal_fov>
+            <image><width>640</width><height>480</height><format>R8G8B8</format></image>
+            <clip><near>0.1</near><far>40</far></clip>
+            <noise><type>gaussian</type><mean>0</mean><stddev>0.01</stddev></noise>
+          </camera>
+          <always_on>1</always_on>
+          <update_rate>10</update_rate>
+          <visualize>true</visualize>
+          <topic>/tilt_camera/image</topic>
+        </sensor>
+      </link>
+    </model>
+
+    <!-- ============ FOLLOWER ROW (y = 7 m) ============ -->
+    <model name="follower_row">
+      <pose>0 7 0 0 0 0</pose>
+
+      <link name="pile">
+        <pose>0 0 0.75 0 0 0</pose>
+        <inertial><mass>100</mass></inertial>
+        <visual name="v">
+          <geometry><box><size>0.12 0.12 1.5</size></box></geometry>
+          <material><ambient>0.55 0.55 0.58 1</ambient><diffuse>0.55 0.55 0.58 1</diffuse></material>
+        </visual>
+      </link>
+      <joint name="anchor" type="fixed">
+        <parent>world</parent>
+        <child>pile</child>
+      </joint>
+
+      <!-- Panel turns about X at the torque tube (z = 1.5 m). Width 2 m along Y. -->
+      <link name="panel">
+        <pose>0 0 1.5 0 0 0</pose>
+        <gravity>false</gravity>
+        <inertial>
+          <mass>20</mass>
+          <inertia><ixx>6.7</ixx><iyy>60</iyy><izz>66</izz><ixy>0</ixy><ixz>0</ixz><iyz>0</iyz></inertia>
+        </inertial>
+        <visual name="glass">
+          <pose>0 0 0.05 0 0 0</pose>
+          <geometry><box><size>8 2 0.04</size></box></geometry>
+          <material><ambient>0.08 0.12 0.25 1</ambient><diffuse>0.08 0.12 0.25 1</diffuse><specular>0.6 0.6 0.7 1</specular></material>
+        </visual>
+        <visual name="tube">
+          <pose>0 0 0 0 1.5708 0</pose>
+          <geometry><cylinder><radius>0.06</radius><length>8</length></cylinder></geometry>
+          <material><ambient>0.5 0.5 0.52 1</ambient><diffuse>0.5 0.5 0.52 1</diffuse></material>
+        </visual>
+
+        <!-- Markers wrap the frame edge (10 cm plates, visible from both faces). -->
+        <!-- Pink on the NEAR edge (toward the camera, y = -1), offset to x = -0.5 -->
+        <visual name="marker_pink">
+          <pose>-0.5 -1.02 0.05 0 0 0</pose>
+          <geometry><box><size>0.10 0.04 0.10</size></box></geometry>
+          <material><ambient>1.0 0.25 0.6 1</ambient><diffuse>1.0 0.25 0.6 1</diffuse><emissive>0.25 0.05 0.15 1</emissive></material>
+        </visual>
+        <!-- Yellow on the FAR edge (y = +1), offset to x = +0.5 -->
+        <visual name="marker_yellow">
+          <pose>0.5 1.02 0.05 0 0 0</pose>
+          <geometry><box><size>0.10 0.04 0.10</size></box></geometry>
+          <material><ambient>1.0 0.85 0.1 1</ambient><diffuse>1.0 0.85 0.1 1</diffuse><emissive>0.25 0.2 0.0 1</emissive></material>
+        </visual>
+      </link>
+
+      <joint name="tilt" type="revolute">
+        <parent>pile</parent>
+        <child>panel</child>
+        <pose>0 0 0 0 0 0</pose>
+        <axis>
+          <xyz>1 0 0</xyz>
+          <limit><lower>-1.0472</lower><upper>1.0472</upper></limit>
+          <dynamics><damping>50</damping></dynamics>
+        </axis>
+      </joint>
+
+      <plugin filename="gz-sim-joint-position-controller-system"
+              name="gz::sim::systems::JointPositionController">
+        <joint_name>tilt</joint_name>
+        <topic>/follower/tilt_cmd</topic>
+        <p_gain>4000</p_gain>
+        <i_gain>50</i_gain>
+        <d_gain>400</d_gain>
+        <i_max>200</i_max>
+        <i_min>-200</i_min>
+        <cmd_max>5000</cmd_max>
+        <cmd_min>-5000</cmd_min>
+      </plugin>
+
+      <plugin filename="gz-sim-joint-state-publisher-system"
+              name="gz::sim::systems::JointStatePublisher">
+        <joint_name>tilt</joint_name>
+      </plugin>
+    </model>
+
+  </world>
+</sdf>

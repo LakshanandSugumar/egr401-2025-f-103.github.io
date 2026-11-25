@@ -49,6 +49,12 @@ nav:
   - Milestones: milestones.md
   - Team: team.md
   - Status: status.md
+  - Camera Concept:
+    - camera-concept/index.md
+    - Field Simulation: camera-concept/simulation.md
+    - Results: camera-concept/results.md
+    - Cost Under $10: camera-concept/cost.md
+    - Gazebo Model: camera-concept/gazebo.md
 
 markdown_extensions:
   - attr_list
@@ -89,7 +95,7 @@ extra_javascript:
 not_in_nav: |
   static
 
-copyright: "Copyright &copy; 2026 Team 20 · Arizona State University, Polytechnic"
+copyright: "Copyright &copy; 2026 Team 20 · Arizona State University, Polytechnic · Built by Lakshanand Sugumar"
 
 extra:
   generator: false
